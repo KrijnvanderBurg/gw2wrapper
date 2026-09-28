@@ -1,4 +1,4 @@
-# Pre-commit hooks for Terraform/OpenTofu
+# Pre-commit hooks for Rust project
 # Install: pip install pre-commit && pre-commit install
 # Run manually: pre-commit run --all-files
 
@@ -16,12 +16,20 @@ repos:
       - id: no-commit-to-branch
         args: ['--branch', 'main']
 
-  # # OpenTofu formatting and validation
-  # - repo: local
-  #   hooks:
-  #     - id: tofu-fmt
-  #       name: OpenTofu fmt
-  #       entry: tofu fmt
-  #       language: system
-  #       files: \.tf(vars)?$
-  #       pass_filenames: true
+  # Rust formatting (rustfmt)
+  - repo: https://github.com/doublify/pre-commit-rust
+    rev: v1.0
+    hooks:
+      - id: fmt
+      - id: cargo-check
+
+  # Rust linting (clippy)
+  - repo: local
+    hooks:
+      - id: clippy
+        name: Clippy
+        description: Run Clippy to catch common mistakes
+        entry: cargo clippy --all-targets -- -D warnings
+        language: system
+        types: [rust]
+        pass_filenames: false

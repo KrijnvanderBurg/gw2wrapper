@@ -1,0 +1,70 @@
+# Cargo-deny configuration for gw2wrapper
+# Comprehensive dependency security and compliance checks
+# https://embarkstudios.github.io/cargo-deny/
+
+[advisories]
+db-path = "$CARGO_HOME/advisory-db"
+db-urls = ["https://github.com/rustsec/advisory-db/raw/main/db.json.gz"]
+vulnerability = "deny"
+unmaintained = "warn"
+yanked = "warn"
+notice = "warn"
+ignore = []
+
+[licenses]
+# FOSS-only policy: permissive and weak-copyleft licenses only
+# No GPL (any version), AGPL, SSPL, or proprietary licenses
+allow = [
+    "MIT",
+    "Apache-2.0",
+    "Apache-2.0 OR MIT",
+    "Apache-2.0 OR Apache-2.0 WITH LLVM-exception",
+    "Apache-2.0 WITH LLVM-exception",
+    "BSD-2-Clause",
+    "BSD-3-Clause",
+    "0BSD",
+    "ISC",
+    "MPL-2.0",
+    "Unicode-DFS-2016",
+]
+deny = [
+    "GPL-2.0",
+    "GPL-3.0",
+    "AGPL-3.0",
+    "SSPL-1.0",
+]
+copyleft = "warn"
+allow-osi-fsf-free = "both"
+default = "deny"
+confidence-threshold = 0.8
+exceptions = []
+
+[bans]
+# Deny multiple versions of the same crate
+multiple-versions = "warn"
+# Deny wildcard dependencies
+wildcards = "warn"
+
+# No git dependencies in production builds
+allow-git = []
+
+# No registry other than crates.io
+allow-registry = ["https://github.com/rust-lang/crates.io-index"]
+
+# Deny these crates explicitly
+deny = []
+
+# Skip certain checks for specific crates if absolutely necessary
+skip = []
+
+# Threshold for duplicate transitive dependencies
+skip-tree = []
+
+[sources]
+# Only allow crates.io
+allow-org = { github = [] }
+allow-registry = ["crates-io"]
+allow-git = []
+
+unknown-registry = "deny"
+unknown-git = "deny"

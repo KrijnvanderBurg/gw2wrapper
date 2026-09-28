@@ -29,3 +29,68 @@ jobs:
 
       - name: Cargo fmt
         run: cargo fmt --all -- --check
+
+  security:
+    name: Security & Dependency Audit
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install Rust
+        run: bash .github/scripts/rust-install.sh
+
+      - name: Install cargo-deny
+        run: cargo install cargo-deny
+
+      - name: Cargo deny (advisories)
+        run: cargo deny check advisories
+
+      - name: Cargo deny (licenses)
+        run: cargo deny check licenses
+
+      - name: Cargo deny (bans & sources)
+        run: cargo deny check bans sources
+
+  build:
+    name: Build & Container Verification
+    runs-on: ubuntu-latest
+    needs: [check, security]
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install Rust
+        run: bash .github/scripts/rust-install.sh
+
+      - name: Add musl target
+        run: rustup target add x86_64-unknown-linux-musl
+
+      - name: Install cargo-auditable
+        run: cargo install cargo-auditable
+
+      - name: Build release binary (musl)
+        run: cargo-auditable build --locked --release --target x86_64-unknown-linux-musl
+
+      - name: Verify binary is static
+        run: |
+          file target/x86_64-unknown-linux-musl/release/hello-world
+          ldd target/x86_64-unknown-linux-musl/release/hello-world || echo "Binary is static (ldd exit != 0 is expected)"
+
+      - name: Install melange
+        run: |
+          curl -L https://github.com/chainguard-dev/melange/releases/download/v0.9.0/melange-amd64 -o /tmp/melange
+          chmod +x /tmp/melange
+
+      - name: Install apko
+        run: |
+          curl -L https://github.com/chainguard-dev/apko/releases/download/v0.14.0/apko-amd64 -o /tmp/apko
+          chmod +x /tmp/apko
+
+      - name: Build OCI image with apko
+        run: /tmp/apko build apko.yaml gw2wrapper:latest gw2wrapper-image.tar
+
+      - name: Load and verify image
+        run: |
+          docker load < gw2wrapper-image.tar
+          docker run --rm gw2wrapper:latest

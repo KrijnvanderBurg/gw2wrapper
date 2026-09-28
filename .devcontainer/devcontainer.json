@@ -18,9 +18,11 @@
     "containerEnv": {},
     "onCreateCommand": {
         "rust-install": "bash .github/scripts/rust-install.sh",
-        "pre-commit-install": "pipx install pre-commit && pre-commit install"
+        "pre-commit-install": "pipx install pre-commit"
     },
-    // "postCreateCommand": {},
+    "postCreateCommand": {
+        "pre-commit install": "pre-commit install"
+    },
     // "postStartCommand": {},
     // "postAttachCommand": {},
     // "updateContentCommand": {},

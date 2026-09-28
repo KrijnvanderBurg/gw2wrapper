@@ -1,0 +1,57 @@
+# Melange configuration for gw2wrapper
+# Builds the Rust application as a Wolfi APK package
+# https://github.com/chainguard-dev/melange
+
+package:
+  name: hello-world
+  version: 0.1.0
+  description: "GW2 Wrapper - Minimal secure Rust application"
+  homepage: "https://github.com/your-org/gw2wrapper"
+  license: "MIT"
+
+environment:
+  contents:
+    packages:
+      - cargo
+      - rustup
+      - build-base
+      - ca-certificates-bundle
+
+pipeline:
+  - uses: git-checkout
+    with:
+      repository: ${{github.repository}}
+      branch: ${{github.ref}}
+      path: /build
+
+  - uses: rust/build
+    with:
+      args: |
+        --locked \
+        --release \
+        --target x86_64-unknown-linux-musl
+
+  - uses: strip
+    with:
+      paths:
+        - /build/target/x86_64-unknown-linux-musl/release/hello-world
+
+  - uses: install
+    with:
+      include:
+        - /build/target/x86_64-unknown-linux-musl/release/hello-world
+        - /build/target/x86_64-unknown-linux-musl/release/hello-world.sbom
+      destination: /usr/local/bin/
+
+subpackages:
+  - name: hello-world-sbom
+    description: "SBOM for hello-world"
+    dependencies:
+      packages:
+        - hello-world
+    pipeline:
+      - uses: install
+        with:
+          include:
+            - /build/target/x86_64-unknown-linux-musl/release/hello-world.sbom
+          destination: /usr/local/bin/
