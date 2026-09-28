@@ -6,9 +6,9 @@
 - **Why**: Prevents MITM attacks and distribution tampering
 - **Verification**: Uses `https://static.rust-lang.org/dist/` (official Rust infrastructure only)
 
-### 2. **GPG Signature Verification** 
+### 2. **GPG Signature Verification**
 - **Why**: Cryptographically proves the installer comes from the Rust Project
-- **Process**: 
+- **Process**:
   - Fetches Rust's public key (E1DD270017412F18)
   - Verifies `.asc` signature against the tarball
   - Aborts if verification fails (`exit 1`)

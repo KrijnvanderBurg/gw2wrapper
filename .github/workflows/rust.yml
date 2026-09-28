@@ -16,7 +16,9 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Install Rust
-        run: bash .github/scripts/rust-install.sh
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          components: clippy, rustfmt
 
       - name: Cargo check
         run: cargo check --all-targets
@@ -38,7 +40,7 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Install Rust
-        run: bash .github/scripts/rust-install.sh
+        uses: dtolnay/rust-toolchain@stable
 
       - name: Install cargo-deny
         run: cargo install cargo-deny
@@ -61,10 +63,9 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Install Rust
-        run: bash .github/scripts/rust-install.sh
-
-      - name: Add musl target
-        run: rustup target add x86_64-unknown-linux-musl
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: x86_64-unknown-linux-musl
 
       - name: Install cargo-auditable
         run: cargo install cargo-auditable

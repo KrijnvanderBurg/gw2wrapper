@@ -8,16 +8,12 @@
     // Features - https://containers.dev/implementors/features.
     //
     "features": {
+        "ghcr.io/devcontainers/features/rust:1": {},
         "ghcr.io/devcontainers/features/python:1": {
             "toolsToInstall": "pipx"
         }
     },
-    //
-    // ContainerEnv
-    //
-    "containerEnv": {},
     "onCreateCommand": {
-        "rust-install": "bash .github/scripts/rust-install.sh",
         "pre-commit-install": "pipx install pre-commit"
     },
     "postCreateCommand": {
