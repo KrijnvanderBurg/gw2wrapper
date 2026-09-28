@@ -6,9 +6,9 @@
 db-path = "$CARGO_HOME/advisory-db"
 db-urls = ["https://github.com/rustsec/advisory-db/raw/main/db.json.gz"]
 vulnerability = "deny"
-unmaintained = "warn"
-yanked = "warn"
-notice = "warn"
+unmaintained = "all"
+yanked = "all"
+notice = "all"
 ignore = []
 
 [licenses]
@@ -17,8 +17,6 @@ ignore = []
 allow = [
     "MIT",
     "Apache-2.0",
-    "Apache-2.0 OR MIT",
-    "Apache-2.0 OR Apache-2.0 WITH LLVM-exception",
     "Apache-2.0 WITH LLVM-exception",
     "BSD-2-Clause",
     "BSD-3-Clause",
@@ -44,21 +42,6 @@ exceptions = []
 multiple-versions = "warn"
 # Deny wildcard dependencies
 wildcards = "warn"
-
-# No git dependencies in production builds
-allow-git = []
-
-# No registry other than crates.io
-allow-registry = ["https://github.com/rust-lang/crates.io-index"]
-
-# Deny these crates explicitly
-deny = []
-
-# Skip certain checks for specific crates if absolutely necessary
-skip = []
-
-# Threshold for duplicate transitive dependencies
-skip-tree = []
 
 [sources]
 # Only allow crates.io
