@@ -7,7 +7,7 @@ db-path = "$CARGO_HOME/advisory-db"
 db-urls = ["https://github.com/rustsec/advisory-db/raw/main/db.json.gz"]
 vulnerability = "deny"
 unmaintained = "all"
-yanked = "all"
+yanked = "deny"
 notice = "all"
 ignore = []
 
