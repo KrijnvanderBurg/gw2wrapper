@@ -105,10 +105,7 @@
                                 "panel": ""
                             },
                             "clear": true,
-                            "problemMatcher": [],
-                            "runOptions": {
-                                "runOn": "folderOpen"
-                            }
+                            "problemMatcher": []
                         }
                     ]
                 }
