@@ -75,7 +75,7 @@ repos:
       - id: apko-build
         name: apko build (wolfi image)
         description: Build the wolfi-based OCI image with apko
-        entry: apko build apko.yaml gw2wrapper:test /tmp/gw2wrapper-apko.tar
+        entry: apko build apko.yaml gw2wrapper:test ./gw2wrapper-apko.tar
         language: system
         files: '(^|/)apko\.yaml$'
         pass_filenames: false
