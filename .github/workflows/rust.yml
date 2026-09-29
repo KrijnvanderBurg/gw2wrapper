@@ -20,17 +20,20 @@ jobs:
         with:
           components: clippy, rustfmt
 
+      - name: Install just
+        uses: extractions/setup-just@v2
+
       - name: Cargo check
-        run: cargo check --all-targets
+        run: just check
 
       - name: Cargo test
-        run: cargo test --all-targets
+        run: just test
 
       - name: Cargo clippy
-        run: cargo clippy --all-targets -- -D warnings
+        run: just clippy
 
       - name: Cargo fmt
-        run: cargo fmt --all -- --check
+        run: just fmt
 
   security:
     name: Security & Dependency Audit
@@ -45,14 +48,17 @@ jobs:
       - name: Install cargo-deny
         run: cargo install cargo-deny
 
+      - name: Install just
+        uses: extractions/setup-just@v2
+
       - name: Cargo deny (advisories)
-        run: cargo deny check advisories
+        run: just deny-advisories
 
       - name: Cargo deny (licenses)
-        run: cargo deny check licenses
+        run: just deny-licenses
 
       - name: Cargo deny (bans & sources)
-        run: cargo deny check bans sources
+        run: just deny-bans
 
   build:
     name: Build & Container Verification
@@ -70,8 +76,11 @@ jobs:
       - name: Install cargo-auditable
         run: cargo install cargo-auditable
 
+      - name: Install just
+        uses: extractions/setup-just@v2
+
       - name: Build release binary (musl)
-        run: cargo-auditable build --locked --release --target x86_64-unknown-linux-musl
+        run: just build-release
 
       - name: Verify binary is static
         run: |
@@ -80,18 +89,19 @@ jobs:
 
       - name: Install melange
         run: |
-          curl -L https://github.com/chainguard-dev/melange/releases/download/v0.9.0/melange-amd64 -o /tmp/melange
-          chmod +x /tmp/melange
+          curl -L https://github.com/chainguard-dev/melange/releases/download/v0.9.0/melange-amd64 -o /usr/local/bin/melange
+          chmod +x /usr/local/bin/melange
 
       - name: Install apko
         run: |
-          curl -L https://github.com/chainguard-dev/apko/releases/download/v0.14.0/apko-amd64 -o /tmp/apko
-          chmod +x /tmp/apko
+          curl -L https://github.com/chainguard-dev/apko/releases/download/v0.14.0/apko-amd64 -o /usr/local/bin/apko
+          chmod +x /usr/local/bin/apko
 
-      - name: Build OCI image with apko
-        run: /tmp/apko build apko.yaml gw2wrapper:latest gw2wrapper-image.tar
+      - name: Build and load apko base image (justfile)
+        run: just base
 
-      - name: Load and verify image
-        run: |
-          docker load < gw2wrapper-image.tar
-          docker run --rm gw2wrapper:latest
+      - name: Verify base image runs
+        run: docker run --rm gw2wrapper:latest
+
+      - name: Build application image (justfile)
+        run: just docker

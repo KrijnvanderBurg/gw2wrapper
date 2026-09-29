@@ -28,7 +28,7 @@ repos:
       - id: cargo-check
         name: cargo check
         description: Check the package for errors
-        entry: cargo check --all-targets
+        entry: just check
         language: system
         types: [rust]
         pass_filenames: false
@@ -36,7 +36,7 @@ repos:
       - id: cargo-test
         name: cargo test
         description: Run the test suite
-        entry: cargo test --all-targets
+        entry: just test
         language: system
         types: [rust]
         pass_filenames: false
@@ -44,7 +44,7 @@ repos:
       - id: clippy
         name: Clippy
         description: Run Clippy to catch common mistakes
-        entry: cargo clippy --all-targets -- -D warnings
+        entry: just clippy
         language: system
         types: [rust]
         pass_filenames: false
@@ -52,21 +52,21 @@ repos:
       # Rust security & dependency audit (mirrors CI "Security & Dependency Audit" job)
       - id: cargo-deny-advisories
         name: cargo-deny (advisories)
-        entry: cargo deny check advisories
+        entry: just deny-advisories
         language: system
         files: '(^|/)(Cargo\.(toml|lock)|deny\.toml)$'
         pass_filenames: false
 
       - id: cargo-deny-licenses
         name: cargo-deny (licenses)
-        entry: cargo deny check licenses
+        entry: just deny-licenses
         language: system
         files: '(^|/)(Cargo\.(toml|lock)|deny\.toml)$'
         pass_filenames: false
 
       - id: cargo-deny-bans-sources
         name: cargo-deny (bans & sources)
-        entry: cargo deny check bans sources
+        entry: just deny-bans
         language: system
         files: '(^|/)(Cargo\.(toml|lock)|deny\.toml)$'
         pass_filenames: false
@@ -75,7 +75,7 @@ repos:
       - id: apko-build
         name: apko build (wolfi image)
         description: Build the wolfi-based OCI image with apko
-        entry: apko build apko.yaml gw2wrapper:test ./gw2wrapper-apko.tar
+        entry: just apko-smoke
         language: system
         files: '(^|/)apko\.yaml$'
         pass_filenames: false
