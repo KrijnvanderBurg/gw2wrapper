@@ -17,9 +17,6 @@ contents:
     # CA certificates for HTTPS
     - ca-certificates-bundle
 
-    # Minimal base layout
-    - wolfi-baselayout
-
 accounts:
   users:
     - username: appuser
@@ -30,11 +27,6 @@ accounts:
   groups:
     - groupname: appuser
       gid: 65532
-
-paths:
-  - path: /tmp
-    type: directory
-    permissions: 0o1777
 
 entrypoint:
   command: /usr/local/bin/hello-world

@@ -13,7 +13,8 @@
         "ghcr.io/devcontainers/features/rust:1": {},
         "ghcr.io/devcontainers/features/python:1": {
             "toolsToInstall": "pipx"
-        }
+        },
+        "ghcr.io/devcontainers/features/docker-outside-of-docker:1": {}
     },
     "onCreateCommand": {
         "pre-commit-install": "pipx install pre-commit",

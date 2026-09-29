@@ -1,6 +1,10 @@
 # Multi-stage build for gw2wrapper
 # Stage 1: Builder - Rust musl static build with cargo-auditable
-# Stage 2: Runtime - Wolfi-based minimal image with explicit dependencies
+# Stage 2: Runtime - the wolfi-based image produced by apko.yaml (this repo's own image)
+#
+# Prerequisite: build and load the apko base image before running `docker build`:
+#   apko build apko.yaml gw2wrapper:latest gw2wrapper-apko.tar
+#   docker load < gw2wrapper-apko.tar
 
 ###############################################################################
 # STAGE 1: Builder
@@ -32,33 +36,18 @@ RUN cp /build/target/x86_64-unknown-linux-musl/release/hello-world /app
 
 ###############################################################################
 # STAGE 2: Runtime
-# Minimal Wolfi-based image with:
-# - Non-root user (65532:65532)
-# - CA certificates for HTTPS
-# - Read-only root filesystem support
-# - No shell, debugger, or package manager
+# gw2wrapper:latest - our own apko-built wolfi image (ca-certs + nonroot user only,
+# no shell, no package manager). Must be loaded locally beforehand, see header.
 ###############################################################################
-FROM cgr.dev/chainguard/wolfi-base:latest
+FROM gw2wrapper:latest
 
-# Install only essential runtime packages
-# ca-certificates: Required for HTTPS verification
-RUN apk add --no-cache ca-certificates-bundle
+# Copy application binary from builder stage, owned by and readable only by appuser
+COPY --from=builder --chown=appuser:appuser --chmod=0500 /app /usr/local/bin/hello-world
 
-# Create explicit non-root application user (nomad UID convention)
-RUN groupadd -g 65532 appuser && \
-    useradd -u 65532 -g 65532 -s /sbin/nologin -d /nonexistent appuser
+# Base image already defaults to this, set explicitly for clarity/defense-in-depth
+USER appuser:appuser
 
-# Create minimal /tmp directory
-RUN mkdir -p /tmp && chmod 1777 /tmp
-
-# Copy application binary from builder stage
-# Use explicit ownership: read-only by app user
-COPY --from=builder --chown=appuser:appuser --chmod=0555 /app /usr/local/bin/hello-world
-
-# Switch to non-root user
-USER appuser
-
-# Set entrypoint (no shell invocation needed)
+# Set entrypoint (no shell invocation possible - image has no shell)
 ENTRYPOINT ["/usr/local/bin/hello-world"]
 
 # Labels for image metadata and provenance
