@@ -1,7 +1,9 @@
 // https://containers.dev/implementors/json_reference/
 {
     "name": "Rust",
-    "image": "mcr.microsoft.com/devcontainers/base:ubuntu-24.04",
+    "build": {
+        "dockerfile": "Dockerfile"
+    },
     "remoteUser": "vscode",
     "containerUser": "vscode",
     //

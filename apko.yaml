@@ -2,16 +2,16 @@
 # Minimal OCI image with explicit dependencies
 # https://github.com/chainguard-dev/apko
 
-metadata:
-  name: gw2wrapper
-  description: "GW2 Wrapper - Minimal secure Rust application"
-  annotations:
-    org.opencontainers.image.source: "https://github.com/your-org/gw2wrapper"
-    org.opencontainers.image.title: "gw2wrapper"
+annotations:
+  org.opencontainers.image.source: "https://github.com/KrijnvanderBurg/gw2wrapper"
+  org.opencontainers.image.title: "gw2wrapper"
 
 contents:
   repositories:
     - https://packages.wolfi.dev/os
+
+  keyring:
+    - https://packages.wolfi.dev/os/wolfi-signing.rsa.pub
 
   packages:
     # CA certificates for HTTPS
@@ -25,7 +25,6 @@ accounts:
     - username: appuser
       uid: 65532
       gid: 65532
-      home: /nonexistent
       shell: /sbin/nologin
 
   groups:

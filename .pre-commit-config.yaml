@@ -70,3 +70,12 @@ repos:
         language: system
         files: '(^|/)(Cargo\.(toml|lock)|deny\.toml)$'
         pass_filenames: false
+
+      # Wolfi/apko image build (smoke test that the image still builds)
+      - id: apko-build
+        name: apko build (wolfi image)
+        description: Build the wolfi-based OCI image with apko
+        entry: apko build apko.yaml gw2wrapper:test /tmp/gw2wrapper-apko.tar
+        language: system
+        files: '(^|/)apko\.yaml$'
+        pass_filenames: false
