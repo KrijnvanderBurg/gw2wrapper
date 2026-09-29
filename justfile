@@ -38,7 +38,7 @@ deny: deny-advisories deny-licenses deny-bans
 
 # Build the release binary with embedded dependency metadata
 build-release:
-    cargo-auditable build --locked --release
+    cargo auditable build --locked --release
 
 # Smoke test that the wolfi/apko image still builds
 apko-smoke:

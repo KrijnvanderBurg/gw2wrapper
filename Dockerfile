@@ -24,7 +24,7 @@ COPY Cargo.toml Cargo.lock ./
 COPY src ./src
 
 # cargo-auditable wraps cargo build and embeds dependency info into binary
-RUN cargo-auditable build \
+RUN cargo auditable build \
     --locked \
     --release
 
