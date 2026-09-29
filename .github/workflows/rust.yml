@@ -70,8 +70,6 @@ jobs:
 
       - name: Install Rust
         uses: dtolnay/rust-toolchain@stable
-        with:
-          targets: x86_64-unknown-linux-musl
 
       - name: Install cargo-auditable
         run: cargo install cargo-auditable
@@ -79,13 +77,13 @@ jobs:
       - name: Install just
         uses: extractions/setup-just@v2
 
-      - name: Build release binary (musl)
+      - name: Build release binary
         run: just build-release
 
-      - name: Verify binary is static
+      - name: Verify binary
         run: |
-          file target/x86_64-unknown-linux-musl/release/hello-world
-          ldd target/x86_64-unknown-linux-musl/release/hello-world || echo "Binary is static (ldd exit != 0 is expected)"
+          file target/release/hello-world
+          ldd target/release/hello-world
 
       - name: Install melange
         run: |

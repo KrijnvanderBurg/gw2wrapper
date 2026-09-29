@@ -36,9 +36,9 @@ deny-bans:
 # Run all cargo-deny checks
 deny: deny-advisories deny-licenses deny-bans
 
-# Build the static musl release binary with embedded dependency metadata
+# Build the release binary with embedded dependency metadata
 build-release:
-    cargo-auditable build --locked --release --target x86_64-unknown-linux-musl
+    cargo-auditable build --locked --release
 
 # Smoke test that the wolfi/apko image still builds
 apko-smoke:

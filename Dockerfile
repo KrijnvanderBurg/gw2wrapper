@@ -1,5 +1,5 @@
 # Multi-stage build for gw2wrapper
-# Stage 1: Builder - Rust musl static build with cargo-auditable
+# Stage 1: Builder - Rust build with cargo-auditable
 # Stage 2: Runtime - the wolfi-based image produced by apko.yaml (this repo's own image)
 #
 # Prerequisite: build and load the apko base image before running `docker build`:
@@ -12,9 +12,8 @@
 ###############################################################################
 FROM rust:latest as builder
 
-# Install musl target and cargo-auditable
-RUN rustup target add x86_64-unknown-linux-musl && \
-    cargo install cargo-auditable
+# Install cargo-auditable
+RUN cargo install cargo-auditable
 
 WORKDIR /build
 
@@ -24,15 +23,13 @@ COPY Cargo.toml Cargo.lock ./
 # Copy source
 COPY src ./src
 
-# Build static binary with musl target
 # cargo-auditable wraps cargo build and embeds dependency info into binary
 RUN cargo-auditable build \
     --locked \
-    --release \
-    --target x86_64-unknown-linux-musl
+    --release
 
 # Extract binary
-RUN cp /build/target/x86_64-unknown-linux-musl/release/hello-world /app
+RUN cp /build/target/release/hello-world /app
 
 ###############################################################################
 # STAGE 2: Runtime

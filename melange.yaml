@@ -28,19 +28,18 @@ pipeline:
     with:
       args: |
         --locked \
-        --release \
-        --target x86_64-unknown-linux-musl
+        --release
 
   - uses: strip
     with:
       paths:
-        - /build/target/x86_64-unknown-linux-musl/release/hello-world
+        - /build/target/release/hello-world
 
   - uses: install
     with:
       include:
-        - /build/target/x86_64-unknown-linux-musl/release/hello-world
-        - /build/target/x86_64-unknown-linux-musl/release/hello-world.sbom
+        - /build/target/release/hello-world
+        - /build/target/release/hello-world.sbom
       destination: /usr/local/bin/
 
 subpackages:
@@ -53,5 +52,5 @@ subpackages:
       - uses: install
         with:
           include:
-            - /build/target/x86_64-unknown-linux-musl/release/hello-world.sbom
+            - /build/target/release/hello-world.sbom
           destination: /usr/local/bin/
