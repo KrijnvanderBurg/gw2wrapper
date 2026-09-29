@@ -18,8 +18,7 @@
     },
     "onCreateCommand": {
         "pre-commit-install": "pipx install pre-commit",
-        "just-install": "cargo install --locked just",
-        "cargo-deny-install": "cargo install --locked cargo-deny"
+        "cargo-install": "cargo install --locked cargo-deny cargo-auditable just"
     },
     "postCreateCommand": {
         "pre-commit install": "pre-commit install"
