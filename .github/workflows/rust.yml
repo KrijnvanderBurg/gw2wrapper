@@ -85,13 +85,21 @@ jobs:
           ldd target/release/hello-world
 
       - name: Install melange
+        env:
+          MELANGE_VERSION: 0.61.1
         run: |
-          curl -L https://github.com/chainguard-dev/melange/releases/download/v0.9.0/melange-amd64 -o /usr/local/bin/melange
+          curl -sSfL "https://github.com/chainguard-dev/melange/releases/download/v${MELANGE_VERSION}/melange_${MELANGE_VERSION}_linux_amd64.tar.gz" \
+            | tar -xzf - -C /tmp
+          find /tmp -type f -name melange -exec mv {} /usr/local/bin/melange \;
           chmod +x /usr/local/bin/melange
 
       - name: Install apko
+        env:
+          APKO_VERSION: 1.4.5
         run: |
-          curl -L https://github.com/chainguard-dev/apko/releases/download/v0.14.0/apko-amd64 -o /usr/local/bin/apko
+          curl -sSfL "https://github.com/chainguard-dev/apko/releases/download/v${APKO_VERSION}/apko_${APKO_VERSION}_linux_amd64.tar.gz" \
+            | tar -xzf - -C /tmp
+          find /tmp -type f -name apko -exec mv {} /usr/local/bin/apko \;
           chmod +x /usr/local/bin/apko
 
       - name: Build and load apko base image (justfile)
