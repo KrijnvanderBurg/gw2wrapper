@@ -33,3 +33,10 @@ repos:
         language: system
         types: [rust]
         pass_filenames: false
+      - id: cargo-deny
+        name: cargo-deny
+        description: Check dependency advisories, licenses, bans and sources
+        entry: cargo deny check
+        language: system
+        files: '(^|/)(Cargo\.(toml|lock)|deny\.toml)$'
+        pass_filenames: false

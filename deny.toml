@@ -4,16 +4,15 @@
 
 [advisories]
 db-path = "$CARGO_HOME/advisory-db"
-db-urls = ["https://github.com/rustsec/advisory-db/raw/main/db.json.gz"]
-vulnerability = "deny"
+db-urls = ["https://github.com/rustsec/advisory-db"]
 unmaintained = "all"
 yanked = "deny"
-notice = "all"
 ignore = []
 
 [licenses]
 # FOSS-only policy: permissive and weak-copyleft licenses only
-# No GPL (any version), AGPL, SSPL, or proprietary licenses
+# All licenses are denied unless explicitly allowed, so there is no need for
+# a separate GPL/AGPL/SSPL deny list (see https://github.com/EmbarkStudios/cargo-deny/pull/611)
 allow = [
     "MIT",
     "Apache-2.0",
@@ -25,15 +24,8 @@ allow = [
     "MPL-2.0",
     "Unicode-DFS-2016",
 ]
-deny = [
-    "GPL-2.0",
-    "GPL-3.0",
-    "AGPL-3.0",
-    "SSPL-1.0",
-]
-copyleft = "warn"
-allow-osi-fsf-free = "both"
-default = "deny"
+# Don't warn about allowed licenses not yet used by any dependency
+unused-allowed-license = "warn"
 confidence-threshold = 0.8
 exceptions = []
 
@@ -46,7 +38,7 @@ wildcards = "warn"
 [sources]
 # Only allow crates.io
 allow-org = { github = [] }
-allow-registry = ["crates-io"]
+allow-registry = ["https://github.com/rust-lang/crates.io-index"]
 allow-git = []
 
 unknown-registry = "deny"
