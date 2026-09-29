@@ -21,11 +21,26 @@ repos:
     rev: v1.0
     hooks:
       - id: fmt
-      - id: cargo-check
 
-  # Rust linting (clippy)
+  # Rust check, test & lint (mirrors CI "Check, Test & Lint" job)
   - repo: local
     hooks:
+      - id: cargo-check
+        name: cargo check
+        description: Check the package for errors
+        entry: cargo check --all-targets
+        language: system
+        types: [rust]
+        pass_filenames: false
+
+      - id: cargo-test
+        name: cargo test
+        description: Run the test suite
+        entry: cargo test --all-targets
+        language: system
+        types: [rust]
+        pass_filenames: false
+
       - id: clippy
         name: Clippy
         description: Run Clippy to catch common mistakes
@@ -33,10 +48,25 @@ repos:
         language: system
         types: [rust]
         pass_filenames: false
-      - id: cargo-deny
-        name: cargo-deny
-        description: Check dependency advisories, licenses, bans and sources
-        entry: cargo deny check
+
+      # Rust security & dependency audit (mirrors CI "Security & Dependency Audit" job)
+      - id: cargo-deny-advisories
+        name: cargo-deny (advisories)
+        entry: cargo deny check advisories
+        language: system
+        files: '(^|/)(Cargo\.(toml|lock)|deny\.toml)$'
+        pass_filenames: false
+
+      - id: cargo-deny-licenses
+        name: cargo-deny (licenses)
+        entry: cargo deny check licenses
+        language: system
+        files: '(^|/)(Cargo\.(toml|lock)|deny\.toml)$'
+        pass_filenames: false
+
+      - id: cargo-deny-bans-sources
+        name: cargo-deny (bans & sources)
+        entry: cargo deny check bans sources
         language: system
         files: '(^|/)(Cargo\.(toml|lock)|deny\.toml)$'
         pass_filenames: false
