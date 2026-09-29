@@ -75,6 +75,9 @@ jobs:
 
       # No official install-only action exists for apko (apko-build/apko-publish
       # perform a full build+publish), so use the officially documented Homebrew install.
+      - name: Set up Homebrew
+        uses: Homebrew/actions/setup-homebrew@1f8e202ffddf94def7f42f6fa3a482e821489f9c # 2026.07.10.1
+
       - name: Install apko
         run: brew install apko
 
