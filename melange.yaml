@@ -6,51 +6,25 @@ package:
   name: hello-world
   version: 0.1.0
   description: "GW2 Wrapper - Minimal secure Rust application"
-  homepage: "https://github.com/your-org/gw2wrapper"
-  license: "MIT"
+  url: "https://github.com/KrijnvanderBurg/gw2wrapper"
+  copyright:
+    - license: "MIT"
 
 environment:
   contents:
     packages:
-      - cargo
-      - rustup
       - build-base
+      - busybox
+      - cargo-auditable
+      - rust
       - ca-certificates-bundle
 
+# Source is this repo's root (melange mounts the directory containing this
+# file as the workspace by default), so no git-checkout step is needed.
 pipeline:
-  - uses: git-checkout
+  - uses: cargo/build
     with:
-      repository: ${{github.repository}}
-      branch: ${{github.ref}}
-      path: /build
-
-  - uses: rust/build
-    with:
-      args: |
-        --locked \
-        --release
-
-  - uses: strip
-    with:
-      paths:
-        - /build/target/release/hello-world
-
-  - uses: install
-    with:
-      include:
-        - /build/target/release/hello-world
-        - /build/target/release/hello-world.sbom
-      destination: /usr/local/bin/
-
-subpackages:
-  - name: hello-world-sbom
-    description: "SBOM for hello-world"
-    dependencies:
-      packages:
-        - hello-world
-    pipeline:
-      - uses: install
-        with:
-          include:
-            - /build/target/release/hello-world.sbom
-          destination: /usr/local/bin/
+      opts: --locked --release
+      output: hello-world
+      prefix: usr
+      install-dir: local/bin

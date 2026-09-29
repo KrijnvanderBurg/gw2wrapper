@@ -67,22 +67,8 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Install Rust
-        uses: dtolnay/rust-toolchain@stable
-
-      - name: Install cargo-auditable
-        run: cargo install cargo-auditable
-
       - name: Install just
         uses: extractions/setup-just@v2
-
-      - name: Build release binary
-        run: just build-release
-
-      - name: Verify binary
-        run: |
-          file target/release/hello-world
-          ldd target/release/hello-world
 
       - name: Install melange
         uses: chainguard-dev/actions/setup-melange@805da2efdffdc42b8afd8880e575a48b471ef544 # v1.6.37
@@ -92,11 +78,8 @@ jobs:
       - name: Install apko
         run: brew install apko
 
-      - name: Build and load apko base image (justfile)
+      - name: Build melange package and apko image, then load it (justfile)
         run: just base
 
-      - name: Verify base image runs
+      - name: Verify image runs
         run: docker run --rm gw2wrapper:latest
-
-      - name: Build application image (justfile)
-        run: just docker

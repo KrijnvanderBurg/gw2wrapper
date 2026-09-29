@@ -2,8 +2,8 @@ image := "gw2wrapper"
 tag := "latest"
 apko_tar := image + "-apko.tar"
 
-# Build everything: apko base image, then the docker image
-build: docker
+# Build everything: melange package, then the apko image
+build: base
 
 # Cargo check (mirrors CI "Check, Test & Lint")
 check:
@@ -40,19 +40,23 @@ deny: deny-advisories deny-licenses deny-bans
 build-release:
     cargo auditable build --locked --release
 
+# Generate a local signing key for melange, if one doesn't already exist
+melange-keygen:
+    test -f melange.rsa || melange keygen
+
+# Build the hello-world apk package with melange, signed with the local key
+melange-build: melange-keygen
+    melange build melange.yaml --arch x86_64 --signing-key melange.rsa
+
 # Smoke test that the wolfi/apko image still builds
-apko-smoke:
+apko-smoke: melange-build
     apko build apko.yaml {{image}}:test ./{{apko_tar}}
 
-# Build and load the apko base image (dependency for docker build)
-base:
+# Build and load the apko image (includes the melange-built application package)
+base: melange-build
     apko build apko.yaml {{image}}:{{tag}} {{apko_tar}}
     docker load < {{apko_tar}}
 
-# Build the application image on top of the apko base image
-docker: base
-    docker build -t {{image}}-app:{{tag}} .
-
-# Remove generated apko tarball
+# Remove generated apko tarball, melange packages and signing key
 clean:
-    rm -f {{apko_tar}}
+    rm -rf {{apko_tar}} packages melange.rsa melange.rsa.pub
