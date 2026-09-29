@@ -11,7 +11,6 @@
     //
     "features": {
         "ghcr.io/devcontainers/features/rust:1": {},
-        "ghcr.io/devcontainers-extra/features/just:1": {},
         "ghcr.io/devcontainers/features/python:1": {
             "toolsToInstall": "pipx"
         },
@@ -19,6 +18,7 @@
     },
     "onCreateCommand": {
         "pre-commit-install": "pipx install pre-commit",
+        "just-install": "cargo install --locked just",
         "cargo-deny-install": "cargo install --locked cargo-deny"
     },
     "postCreateCommand": {
