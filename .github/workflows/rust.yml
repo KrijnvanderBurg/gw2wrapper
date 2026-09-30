@@ -73,20 +73,14 @@ jobs:
       - name: Install melange
         uses: chainguard-dev/actions/setup-melange@805da2efdffdc42b8afd8880e575a48b471ef544 # v1.6.37
 
-      # No official install-only action exists for apko (apko-build/apko-publish
-      # perform a full build+publish), so use the officially documented Homebrew install.
-      - name: Set up Homebrew
-        uses: Homebrew/actions/setup-homebrew@1f8e202ffddf94def7f42f6fa3a482e821489f9c # 2026.07.10.1
+      - name: Build melange package (justfile)
+        run: just melange-build
 
-      - name: Install apko
-        # Disable Homebrew's sandbox to avoid the Landlock ABI 10 warning on
-        # GitHub Actions' older kernel (sandboxing isn't needed here anyway).
-        env:
-          HOMEBREW_NO_SANDBOX: "1"
-        run: brew install apko
-
-      - name: Build melange package and apko image (justfile)
-        run: just base
+      - name: Build apko image
+        uses: chainguard-images/actions/apko-build@main
+        with:
+          config: apko.yaml
+          tag: gw2wrapper:latest
 
       - name: Verify image tarball contains the application binary
-        run: tar -tf gw2wrapper-apko.tar | grep -q 'usr/local/bin/hello-world'
+        run: tar -tf output.tar | grep -q 'usr/local/bin/hello-world'
