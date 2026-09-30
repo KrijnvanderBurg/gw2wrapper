@@ -10,7 +10,7 @@ on:
 jobs:
   check:
     name: Check, Test & Lint
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     steps:
       - name: Checkout code
         uses: actions/checkout@v7
@@ -37,7 +37,7 @@ jobs:
 
   security:
     name: Security & Dependency Audit
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     steps:
       - name: Checkout code
         uses: actions/checkout@v7
@@ -62,7 +62,7 @@ jobs:
 
   build:
     name: Build & Container Verification
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     steps:
       - name: Checkout code
         uses: actions/checkout@v7
@@ -79,6 +79,10 @@ jobs:
         uses: Homebrew/actions/setup-homebrew@1f8e202ffddf94def7f42f6fa3a482e821489f9c # 2026.07.10.1
 
       - name: Install apko
+        # Disable Homebrew's sandbox to avoid the Landlock ABI 10 warning on
+        # GitHub Actions' older kernel (sandboxing isn't needed here anyway).
+        env:
+          HOMEBREW_NO_SANDBOX: "1"
         run: brew install apko
 
       - name: Build melange package and apko image (justfile)
