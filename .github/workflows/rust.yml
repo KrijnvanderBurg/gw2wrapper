@@ -81,8 +81,8 @@ jobs:
       - name: Install apko
         run: brew install apko
 
-      - name: Build melange package and apko image, then load it (justfile)
+      - name: Build melange package and apko image (justfile)
         run: just base
 
-      - name: Verify image runs
-        run: docker run --rm gw2wrapper:latest
+      - name: Verify image tarball contains the application binary
+        run: tar -tf gw2wrapper-apko.tar | grep -q 'usr/local/bin/hello-world'

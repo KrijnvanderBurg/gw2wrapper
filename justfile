@@ -45,19 +45,16 @@ melange-keygen:
     test -f melange.rsa || melange keygen
 
 # Build the hello-world apk package with melange, signed with the local key
-# Uses the docker runner since bubblewrap requires unprivileged user namespaces
-# that aren't reliably available in (nested) dev containers.
 melange-build: melange-keygen
-    melange build melange.yaml --arch x86_64 --signing-key melange.rsa --runner docker
+    melange build melange.yaml --arch x86_64 --signing-key melange.rsa --runner bubblewrap
 
 # Smoke test that the wolfi/apko image still builds
 apko-smoke: melange-build
     apko build apko.yaml {{image}}:test ./{{apko_tar}}
 
-# Build and load the apko image (includes the melange-built application package)
+# Build the apko image tarball (includes the melange-built application package)
 base: melange-build
     apko build apko.yaml {{image}}:{{tag}} {{apko_tar}}
-    docker load < {{apko_tar}}
 
 # Remove generated apko tarball, melange packages and signing key
 clean:
