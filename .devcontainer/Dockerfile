@@ -5,6 +5,11 @@ FROM mcr.microsoft.com/devcontainers/base:ubuntu-24.04
 ARG APKO_VERSION=1.4.5
 ARG MELANGE_VERSION=0.61.1
 
+# bubblewrap is required by melange to run its build sandbox
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends bubblewrap && \
+    rm -rf /var/lib/apt/lists/*
+
 RUN mkdir -p /tmp/apko /tmp/melange && \
     curl -sSfL "https://github.com/chainguard-dev/apko/releases/download/v${APKO_VERSION}/apko_${APKO_VERSION}_linux_amd64.tar.gz" \
         | tar -xzf - -C /tmp/apko && \
