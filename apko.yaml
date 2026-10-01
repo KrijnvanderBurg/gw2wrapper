@@ -7,8 +7,7 @@ annotations:
   org.opencontainers.image.title: "gw2wrapper"
   org.opencontainers.image.licenses: "Apache-2.0"
 
-# Only Wolfi packages are listed here so apko.lock.json pins them; the locally built
-# gw2wrapper package, its repo and signing key are appended by the justfile (-p/-b/-k).
+# The locally built gw2wrapper package, its repo and signing key are appended by the justfile (-p/-b/-k)
 contents:
   repositories:
     - https://packages.wolfi.dev/os
@@ -21,9 +20,6 @@ contents:
     - wolfi-baselayout
     # CA certificates for HTTPS
     - ca-certificates-bundle
-    # Runtime libraries of the Rust binary, listed explicitly so the lockfile pins them
-    - glibc
-    - libgcc
 
 accounts:
   users:

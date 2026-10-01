@@ -234,7 +234,7 @@ jobs:
 
       # Same inputs as publish-image.sh, without pushing
       - name: Build multi-arch image
-        run: apko build apko.yaml gw2wrapper:ci build/gw2wrapper.tar --lockfile apko.lock.json -b build/packages -k build/melange-x86_64.rsa.pub -k build/melange-aarch64.rsa.pub -p gw2wrapper
+        run: apko build apko.yaml gw2wrapper:ci build/gw2wrapper.tar -b build/packages -k build/melange-x86_64.rsa.pub -k build/melange-aarch64.rsa.pub -p gw2wrapper
 
   publish:
     name: Publish, Sign & Attest

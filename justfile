@@ -95,13 +95,9 @@ melange-build: melange-keygen
 melange-test: melange-build
     melange test melange.yaml --arch {{ arch }} --repository-append {{ justfile_directory() }}/{{ out }}/packages --keyring-append {{ melange_key }}.pub --runner bubblewrap
 
-# Refresh apko.lock.json to the latest Wolfi packages (picks up CVE fixes)
-lock:
-    apko lock apko.yaml --output apko.lock.json
-
-# Build the host-arch image tarball from the lockfile plus the melange-built package
+# Build the host-arch image tarball with the melange-built package
 base: melange-build
-    apko build apko.yaml {{ image }}:{{ tag }} {{ apko_tar }} --arch {{ arch }} --lockfile apko.lock.json -b {{ out }}/packages -k {{ melange_key }}.pub -p {{ image }} --sbom-path {{ out }}
+    apko build apko.yaml {{ image }}:{{ tag }} {{ apko_tar }} --arch {{ arch }} -b {{ out }}/packages -k {{ melange_key }}.pub -p {{ image }} --sbom-path {{ out }}
 
 # Scan the image tarball with two independent vulnerability databases
 scan:

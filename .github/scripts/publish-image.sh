@@ -14,7 +14,6 @@ export SOURCE_DATE_EPOCH
 
 mkdir -p build/sbom
 apko publish apko.yaml "${refs[@]}" \
-    --lockfile apko.lock.json \
     -b build/packages \
     -k build/melange-x86_64.rsa.pub \
     -k build/melange-aarch64.rsa.pub \

@@ -17,7 +17,6 @@ Every check is a [just](https://github.com/casey/just) recipe, run by both pre-c
 | `just zizmor actionlint gitleaks typos hadolint just-fmt` | Repository linters |
 | `just verify-image` | Build and test the melange package, build the apko image, scan with Trivy and Grype |
 | `just run` | Run the image with a read-only root filesystem, no capabilities and `no-new-privileges` |
-| `just lock` | Refresh `apko.lock.json` to the latest Wolfi packages |
 
 `verify-image` runs on `pre-push`; everything else on `pre-commit`.
 
@@ -26,8 +25,7 @@ Every check is a [just](https://github.com/casey/just) recipe, run by both pre-c
 - [rust.yml](.github/workflows/rust.yml): checks, audits, repository lint and a native x86_64/aarch64 image build and
   scan. On `main` and `v*` tags the multi-arch image is pushed to GHCR, keyless-signed with cosign, and gets SBOM and
   SLSA provenance attestations.
-- [maintenance.yml](.github/workflows/maintenance.yml): weekly signature check and re-scan of the published image, and
-  a PR refreshing `apko.lock.json`.
+- [maintenance.yml](.github/workflows/maintenance.yml): weekly signature check and re-scan of the published image.
 - [codeql.yml](.github/workflows/codeql.yml), [scorecard.yml](.github/workflows/scorecard.yml): CodeQL (Rust, Actions)
   and OpenSSF Scorecard.
 - [Renovate](renovate.json) updates all pins. After a mise tool bump run `mise lock`; after a mise or Rust bump update

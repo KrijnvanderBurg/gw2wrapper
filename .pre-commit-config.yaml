@@ -140,6 +140,6 @@ repos:
         name: melange test, apko build, Trivy & Grype scan
         entry: just verify-image
         language: system
-        files: '\.rs$|(^|/)(Cargo\.(toml|lock)|melange\.yaml|apko\.yaml|apko\.lock\.json|\.melangeignore|trivy\.yaml|\.grype\.yaml|justfile)$'
+        files: '\.rs$|(^|/)(Cargo\.(toml|lock)|melange\.yaml|apko\.yaml|\.melangeignore|trivy\.yaml|\.grype\.yaml|justfile)$'
         pass_filenames: false
         stages: [pre-push]
