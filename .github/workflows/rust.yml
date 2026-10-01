@@ -293,7 +293,7 @@ jobs:
     steps:
       # Requires a PAT with packages:delete scope; GITHUB_TOKEN cannot delete package versions
       - name: Delete untagged versions older than 7 days
-        uses: snok/container-retention-policy@4f7698d460650b124a99af891a4921f5c33b0a21 # v3.1.0
+        uses: snok/container-retention-policy@d3bdcf5ce9b05f685154e4a16c39233b245e3d53 # v3.1.0
         with:
           account: user
           token: ${{ secrets.PACKAGES_DELETE_TOKEN }}
