@@ -1,0 +1,10 @@
+# Single source of truth for tool versions, used by both the devcontainer and CI.
+# The Rust toolchain itself is pinned in rust-toolchain.toml.
+[tools]
+apko = "1.4.5"
+cargo-deny = "0.20.2"
+"cargo:cargo-auditable" = "0.7.6"
+just = "1.58.0"
+melange = "0.61.1"
+pre-commit = "4.6.2"
+trivy = "0.74.0"

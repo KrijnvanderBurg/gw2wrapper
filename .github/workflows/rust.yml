@@ -18,13 +18,13 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v7
 
-      - name: Install Rust
-        uses: dtolnay/rust-toolchain@stable
-        with:
-          components: clippy, rustfmt
+      - name: Install Rust (rust-toolchain.toml)
+        run: rustup toolchain install
 
-      - name: Install just
-        uses: extractions/setup-just@v4
+      - name: Install tools (mise.toml)
+        uses: jdx/mise-action@7a4e45a543138629540c9a1616d08632b893e492 # v5.0.1
+        with:
+          version: 2026.9.18
 
       - name: Cargo check
         run: just check
@@ -45,14 +45,13 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v7
 
-      - name: Install Rust
-        uses: dtolnay/rust-toolchain@stable
+      - name: Install Rust (rust-toolchain.toml)
+        run: rustup toolchain install
 
-      - name: Install cargo-deny
-        run: cargo install --locked cargo-deny
-
-      - name: Install just
-        uses: extractions/setup-just@v4
+      - name: Install tools (mise.toml)
+        uses: jdx/mise-action@7a4e45a543138629540c9a1616d08632b893e492 # v5.0.1
+        with:
+          version: 2026.9.18
 
       - name: Cargo deny (advisories)
         run: just deny-advisories
@@ -65,39 +64,35 @@ jobs:
 
   build:
     name: Build & Container Verification
-    # setup-melange installs qemu-user-static, which has no installation candidate on 24.04
     runs-on: ubuntu-24.04
-    env:
-      # apko suffixes the loaded image tag with the architecture
-      IMAGE: gw2wrapper:latest-amd64
     steps:
       - name: Checkout code
         uses: actions/checkout@v7
 
-      - name: Install just
-        uses: extractions/setup-just@v4
-
-      - name: Install melange
-        uses: chainguard-dev/actions/setup-melange@805da2efdffdc42b8afd8880e575a48b471ef544 # v1.6.37
-
-      - name: Build & test melange package (justfile)
-        run: just melange-test
-
-      - name: Build apko image
-        uses: chainguard-images/actions/apko-build@main
+      - name: Install tools (mise.toml)
+        uses: jdx/mise-action@7a4e45a543138629540c9a1616d08632b893e492 # v5.0.1
         with:
-          config: apko.yaml
-          tag: gw2wrapper:latest
+          version: 2026.9.18
 
-      - name: Load image
-        run: docker load -i output.tar
+      # Ubuntu 24.04's AppArmor blocks the user namespaces melange's sandbox needs; allow them for bwrap only
+      - name: Install bubblewrap
+        run: |
+          sudo apt-get update
+          sudo apt-get install --yes --no-install-recommends bubblewrap
+          sudo tee /etc/apparmor.d/local-bwrap > /dev/null <<'EOF'
+          abi <abi/4.0>,
+          include <tunables/global>
+          profile local-bwrap /usr/bin/bwrap flags=(unconfined) {
+            userns,
+            include if exists <local/bwrap>
+          }
+          EOF
+          sudo systemctl reload apparmor
 
-      - name: Image scan (Trivy)
-        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
-        with:
-          image-ref: ${{ env.IMAGE }}
-          trivy-config: trivy.yaml
-          output: trivy-report.txt
+      - name: Test package, build image & scan with Trivy (justfile)
+        run: just verify-image
+        env:
+          TRIVY_OUTPUT: trivy-report.txt
 
       - name: Publish Trivy report to job summary
         if: ${{ !cancelled() && hashFiles('trivy-report.txt') != '' }}

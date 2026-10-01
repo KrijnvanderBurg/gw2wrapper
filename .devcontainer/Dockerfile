@@ -1,21 +1,16 @@
-# Devcontainer image: base + apko/melange (Wolfi image build tooling)
-# Rust and Python/pipx are installed via devcontainer features, not here.
+# Devcontainer image: base + mise (installs the tools pinned in mise.toml)
+# Rust and Python are installed via devcontainer features, not here.
 FROM mcr.microsoft.com/devcontainers/base:ubuntu-24.04
 
-ARG APKO_VERSION=1.4.5
-ARG MELANGE_VERSION=0.61.1
+ARG MISE_VERSION=2026.9.18
+ARG MISE_SHA256=d24fe0bf7e613824ad99f7b8dac3f2b381a37b9f75f84dd250855217095a8de4
 
 # bubblewrap is required by melange to run its build sandbox
 RUN apt-get update && \
     apt-get install -y --no-install-recommends bubblewrap && \
     rm -rf /var/lib/apt/lists/*
 
-RUN mkdir -p /tmp/apko /tmp/melange && \
-    curl -sSfL "https://github.com/chainguard-dev/apko/releases/download/v${APKO_VERSION}/apko_${APKO_VERSION}_linux_amd64.tar.gz" \
-        | tar -xzf - -C /tmp/apko && \
-    curl -sSfL "https://github.com/chainguard-dev/melange/releases/download/v${MELANGE_VERSION}/melange_${MELANGE_VERSION}_linux_amd64.tar.gz" \
-        | tar -xzf - -C /tmp/melange && \
-    find /tmp/apko -type f -name apko -exec mv {} /usr/local/bin/apko \; && \
-    find /tmp/melange -type f -name melange -exec mv {} /usr/local/bin/melange \; && \
-    chmod +x /usr/local/bin/apko /usr/local/bin/melange && \
-    rm -rf /tmp/apko /tmp/melange
+RUN curl -sSfLo /usr/local/bin/mise \
+        "https://github.com/jdx/mise/releases/download/v${MISE_VERSION}/mise-v${MISE_VERSION}-linux-x64" && \
+    echo "${MISE_SHA256}  /usr/local/bin/mise" | sha256sum -c - && \
+    chmod 0755 /usr/local/bin/mise
