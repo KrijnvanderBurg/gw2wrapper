@@ -16,66 +16,64 @@ repos:
       - id: no-commit-to-branch
         args: ['--branch', 'main']
 
-  # Rust formatting (rustfmt)
-  - repo: https://github.com/doublify/pre-commit-rust
-    rev: v1.0
-    hooks:
-      - id: fmt
-
-  # Rust check, test & lint (mirrors CI "Check, Test & Lint" job)
+  # Every hook below runs the same just recipe as the matching CI step, so a pass here means a pass in CI
   - repo: local
     hooks:
+      # CI "Check, Test & Lint"
       - id: cargo-check
         name: cargo check
-        description: Check the package for errors
         entry: just check
         language: system
-        types: [rust]
+        files: '\.rs$|(^|/)(Cargo\.(toml|lock)|justfile)$'
         pass_filenames: false
 
       - id: cargo-test
         name: cargo test
-        description: Run the test suite
         entry: just test
         language: system
-        types: [rust]
+        files: '\.rs$|(^|/)(Cargo\.(toml|lock)|justfile)$'
         pass_filenames: false
 
       - id: clippy
-        name: Clippy
-        description: Run Clippy to catch common mistakes
+        name: cargo clippy
         entry: just clippy
         language: system
-        types: [rust]
+        files: '\.rs$|(^|/)(Cargo\.(toml|lock)|justfile)$'
         pass_filenames: false
 
-      # Rust security & dependency audit (mirrors CI "Security & Dependency Audit" job)
+      - id: cargo-fmt
+        name: cargo fmt
+        entry: just fmt
+        language: system
+        files: '\.rs$|(^|/)(Cargo\.(toml|lock)|justfile)$'
+        pass_filenames: false
+
+      # CI "Security & Dependency Audit"
       - id: cargo-deny-advisories
         name: cargo-deny (advisories)
         entry: just deny-advisories
         language: system
-        files: '(^|/)(Cargo\.(toml|lock)|deny\.toml)$'
+        files: '(^|/)(Cargo\.(toml|lock)|deny\.toml|justfile)$'
         pass_filenames: false
 
       - id: cargo-deny-licenses
         name: cargo-deny (licenses)
         entry: just deny-licenses
         language: system
-        files: '(^|/)(Cargo\.(toml|lock)|deny\.toml)$'
+        files: '(^|/)(Cargo\.(toml|lock)|deny\.toml|justfile)$'
         pass_filenames: false
 
       - id: cargo-deny-bans-sources
         name: cargo-deny (bans & sources)
         entry: just deny-bans
         language: system
-        files: '(^|/)(Cargo\.(toml|lock)|deny\.toml)$'
+        files: '(^|/)(Cargo\.(toml|lock)|deny\.toml|justfile)$'
         pass_filenames: false
 
-      # Wolfi/apko image build (smoke test that the image still builds)
-      - id: apko-build
-        name: apko build (wolfi image)
-        description: Build the wolfi-based OCI image with apko
-        entry: just apko-smoke
+      # CI "Build & Container Verification"
+      - id: verify-image
+        name: melange test, apko build & Trivy scan
+        entry: just verify-image
         language: system
-        files: '(^|/)apko\.yaml$'
+        files: '\.rs$|(^|/)(Cargo\.(toml|lock)|melange\.yaml|apko\.yaml|trivy\.yaml|justfile)$'
         pass_filenames: false

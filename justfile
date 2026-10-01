@@ -52,13 +52,14 @@ melange-build: melange-keygen
 melange-test: melange-build
     melange test melange.yaml --arch x86_64 --repository-append {{justfile_directory()}}/packages --keyring-append melange.rsa.pub --runner bubblewrap
 
-# Smoke test that the wolfi/apko image still builds
-apko-smoke: melange-build
-    apko build apko.yaml {{image}}:test ./{{apko_tar}}
-
 # Build the apko image tarball (includes the melange-built application package)
 base: melange-build
     apko build apko.yaml {{image}}:{{tag}} {{apko_tar}}
+
+# Mirrors CI "Build & Container Verification": test the package, build the image, scan it with Trivy
+verify-image: melange-test base
+    docker load -i {{apko_tar}}
+    trivy image --config trivy.yaml {{image}}:{{tag}}-amd64
 
 # Remove generated apko tarball, melange packages and signing key
 clean:
