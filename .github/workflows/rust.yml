@@ -74,7 +74,7 @@ jobs:
         with:
           version: 2026.9.18
 
-      # Ubuntu 24.04's AppArmor blocks the user namespaces melange's sandbox needs; allow them for bwrap only
+      # Official fix from melange for Ubuntu 24.04: https://github.com/chainguard-dev/melange/issues/1508
       - name: Install bubblewrap
         run: |
           sudo apt-get update
