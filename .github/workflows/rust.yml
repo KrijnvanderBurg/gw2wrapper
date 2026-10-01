@@ -299,4 +299,4 @@ jobs:
           token: ${{ secrets.PACKAGES_DELETE_TOKEN }}
           image-names: gw2wrapper
           tag-selection: untagged
-          cut-off: 7d
+          cut-off: 0d
