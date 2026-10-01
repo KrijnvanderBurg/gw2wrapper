@@ -303,5 +303,5 @@ jobs:
           account: user
           token: ${{ secrets.PACKAGES_DELETE_TOKEN }}
           image-names: gw2wrapper
-          tag-selection: untagged
+          tag-selection: both
           cut-off: 1s
