@@ -22,7 +22,7 @@ exceptions = []
 
 [bans]
 # Deny multiple versions of the same crate
-multiple-versions = "warn"
+multiple-versions = "deny"
 # Deny wildcard dependencies
 wildcards = "deny"
 
