@@ -86,5 +86,8 @@ jobs:
           config: apko.yaml
           tag: gw2wrapper:latest
 
-      - name: Verify image tarball contains the application binary
-        run: tar -tf output.tar | grep -q 'usr/local/bin/hello-world'
+      - name: Smoke test image (non-root, read-only, no capabilities, no network)
+        run: |
+          image=$(docker load -i output.tar | sed -n 's/^Loaded image: //p' | tail -n1)
+          test "$(docker image inspect --format '{{.Config.User}}' "$image")" = "65532"
+          test "$(docker run --rm --read-only --cap-drop=ALL --security-opt=no-new-privileges --network=none "$image")" = "Hello, World!"
