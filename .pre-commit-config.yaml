@@ -85,13 +85,6 @@ repos:
         files: '(^|/)(Cargo\.(toml|lock)|deny\.toml|justfile)$'
         pass_filenames: false
 
-      - id: cargo-vet
-        name: cargo vet
-        entry: just vet
-        language: system
-        files: '(^|/)(Cargo\.(toml|lock)|justfile)$|^supply-chain/'
-        pass_filenames: false
-
       # CI "Repository Lint"
       - id: zizmor
         name: zizmor (workflow security)

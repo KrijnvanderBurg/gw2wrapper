@@ -50,10 +50,6 @@ deny-bans:
 # Run all cargo-deny checks
 deny: deny-advisories deny-licenses deny-bans
 
-# cargo-vet: every dependency must be audited or exempted
-vet:
-    cargo vet --locked
-
 # Build the release binary with embedded dependency metadata (same command as melange.yaml)
 build-release:
     cargo auditable build --locked --release

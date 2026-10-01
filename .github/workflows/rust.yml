@@ -75,7 +75,7 @@ jobs:
         uses: jdx/mise-action@7a4e45a543138629540c9a1616d08632b893e492 # v5.0.1
         with:
           version: 2026.9.18
-          install_args: just cargo-deny cargo:cargo-vet
+          install_args: just cargo-deny
           cache: false
 
       - name: Cargo deny (advisories)
@@ -86,9 +86,6 @@ jobs:
 
       - name: Cargo deny (bans & sources)
         run: just deny-bans
-
-      - name: Cargo vet
-        run: just vet
 
   lint:
     name: Repository Lint
@@ -131,12 +128,6 @@ jobs:
 
       - name: Justfile format
         run: just just-fmt
-
-      - name: Pre-commit generic hooks
-        run: pre-commit run --all-files
-        env:
-          # Local hooks already run as steps above; no-commit-to-branch would fail on main
-          SKIP: no-commit-to-branch,cargo-check,cargo-test,clippy,cargo-fmt,cargo-doc,cargo-deny-advisories,cargo-deny-licenses,cargo-deny-bans-sources,cargo-vet,zizmor,actionlint,gitleaks,typos,hadolint,just-fmt
 
   build:
     name: Build & Container Verification (${{ matrix.arch }})

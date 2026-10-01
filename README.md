@@ -13,7 +13,7 @@ Every check is a [just](https://github.com/casey/just) recipe, run by both pre-c
 | Command | Purpose |
 | --- | --- |
 | `just check test clippy fmt doc` | Build, test and lint (lint levels in `Cargo.toml` `[lints]`) |
-| `just deny vet` | Advisories, licenses, bans, build scripts, sources and cargo-vet audits |
+| `just deny` | Advisories, licenses, bans, build scripts, and sources |
 | `just zizmor actionlint gitleaks typos hadolint just-fmt` | Repository linters |
 | `just verify-image` | Build and test the melange package, build the apko image, scan with Trivy and Grype |
 | `just run` | Run the image with a read-only root filesystem, no capabilities and `no-new-privileges` |
