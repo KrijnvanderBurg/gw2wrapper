@@ -15,12 +15,20 @@ fi
 SOURCE_DATE_EPOCH="$(git log -1 --format=%ct)"
 export SOURCE_DATE_EPOCH
 
+# Static annotations live in apko.yaml; these vary per build so are passed on the CLI
+annotations=(
+    "org.opencontainers.image.revision:$(git rev-parse HEAD)"
+    "org.opencontainers.image.created:$(date -u -d "@${SOURCE_DATE_EPOCH}" +%Y-%m-%dT%H:%M:%SZ)"
+    "org.opencontainers.image.version:${refs[-1]#*:}"
+)
+
 mkdir -p build/sbom
 apko publish apko.yaml "${refs[@]}" \
     -b build/packages \
     -k build/melange-x86_64.rsa.pub \
     -k build/melange-aarch64.rsa.pub \
     -p gw2wrapper \
+    --annotations "${annotations[0]}" --annotations "${annotations[1]}" --annotations "${annotations[2]}" \
     --sbom-path build/sbom \
     --image-refs build/image-refs
 

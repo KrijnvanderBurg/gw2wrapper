@@ -6,6 +6,7 @@ annotations:
   org.opencontainers.image.source: "https://github.com/KrijnvanderBurg/gw2wrapper"
   org.opencontainers.image.title: "gw2wrapper"
   org.opencontainers.image.licenses: "Apache-2.0"
+  org.opencontainers.image.description: "Guild Wars 2 API wrapper"
 
 # The locally built gw2wrapper package, its repo and signing key are appended by the justfile (-p/-b/-k)
 contents:

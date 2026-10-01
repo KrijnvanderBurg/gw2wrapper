@@ -283,3 +283,20 @@ jobs:
         uses: ./.github/actions/verify-image-signature
         with:
           image-ref: ghcr.io/krijnvanderburg/gw2wrapper@${{ steps.publish.outputs.digest }}
+
+  cleanup:
+    name: Prune Untagged Package Versions
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    permissions:
+      packages: write
+    steps:
+      # Requires a PAT with packages:delete scope; GITHUB_TOKEN cannot delete package versions
+      - name: Delete untagged versions older than 7 days
+        uses: snok/container-retention-policy@4f7698d460650b124a99af891a4921f5c33b0a21 # v3.1.0
+        with:
+          account: user
+          token: ${{ secrets.PACKAGES_DELETE_TOKEN }}
+          image-names: gw2wrapper
+          tag-selection: untagged
+          cut-off: 7d
