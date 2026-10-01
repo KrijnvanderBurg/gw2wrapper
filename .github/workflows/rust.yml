@@ -97,3 +97,14 @@ jobs:
         with:
           image-ref: ${{ env.IMAGE }}
           trivy-config: trivy.yaml
+          output: trivy-report.txt
+
+      - name: Publish Trivy report to job summary
+        if: ${{ !cancelled() && hashFiles('trivy-report.txt') != '' }}
+        run: |
+          {
+            echo "## Trivy image scan"
+            echo '```'
+            cat trivy-report.txt
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
