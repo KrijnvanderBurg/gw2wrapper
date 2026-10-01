@@ -33,7 +33,7 @@ exceptions = []
 # Deny multiple versions of the same crate
 multiple-versions = "warn"
 # Deny wildcard dependencies
-wildcards = "warn"
+wildcards = "deny"
 
 [sources]
 # Only allow crates.io

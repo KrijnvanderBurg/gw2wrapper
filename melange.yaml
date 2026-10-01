@@ -5,6 +5,7 @@
 package:
   name: hello-world
   version: 0.1.0
+  epoch: 0
   description: "GW2 Wrapper - Minimal secure Rust application"
   url: "https://github.com/KrijnvanderBurg/gw2wrapper"
   copyright:
