@@ -1,0 +1,34 @@
+[files]
+extend-exclude = [
+  "LICENSE",
+  "target/",
+  "build/",
+  "**/devcontainer.json"
+]
+ignore-hidden = true
+ignore-files = true
+ignore-dot = true
+ignore-vcs = true
+ignore-global = true
+ignore-parent = true
+
+[default]
+binary = false
+check-filename = true
+check-file = true
+unicode = false
+locale = "en-gb"
+# extend-ignore-re = []
+# extend-ignore-identifiers-re = []
+# extend-ignore-words-re = []
+
+[default.extend-words]
+# <typo> = "<correction>"
+
+[default.extend-identifiers]
+CARGO_TERM_COLOR = "CARGO_TERM_COLOR"
+# <typo> = "<correction>"
+
+# [type.NAME]
+# extend-glob = []
+# ... see `default`

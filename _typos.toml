@@ -1,3 +1,0 @@
-[files]
-# Generated lockfiles contain checksums and keys
-extend-exclude = ["*.lock"]

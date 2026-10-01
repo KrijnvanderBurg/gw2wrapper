@@ -5,7 +5,7 @@ Minimal, secure Guild Wars 2 API wrapper, shipped as a distroless [Wolfi](https:
 
 ## Development
 
-Open the repo in the devcontainer. Tool versions are pinned in [mise.toml](mise.toml) (checksums in `mise.lock`) and
+Open the repo in appla the devcontainer. Tool versions are pinned in [mise.toml](mise.toml) (checksums in `mise.lock`) and
 the Rust toolchain in [rust-toolchain.toml](rust-toolchain.toml), identical for devcontainer, pre-commit and CI.
 
 Every check is a [just](https://github.com/casey/just) recipe, run by both pre-commit and CI:
