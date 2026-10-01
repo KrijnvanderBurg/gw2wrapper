@@ -1,0 +1,22 @@
+# Trivy settings for the gw2wrapper image (CI, or locally: trivy image --config trivy.yaml <image>)
+# https://trivy.dev/latest/docs/references/configuration/config-file/
+
+exit-code: 1
+
+severity:
+  - HIGH
+  - CRITICAL
+
+scan:
+  scanners:
+    - vuln
+    - secret
+
+image:
+  # Checks the image config as a Dockerfile (e.g. running as root) and scans env/labels for secrets
+  image-config-scanners:
+    - misconfig
+    - secret
+
+vulnerability:
+  ignore-unfixed: true

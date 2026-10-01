@@ -67,6 +67,9 @@ jobs:
     name: Build & Container Verification
     # setup-melange installs qemu-user-static, which has no installation candidate on 24.04
     runs-on: ubuntu-24.04
+    env:
+      # apko suffixes the loaded image tag with the architecture
+      IMAGE: gw2wrapper:latest-amd64
     steps:
       - name: Checkout code
         uses: actions/checkout@v7
@@ -77,8 +80,8 @@ jobs:
       - name: Install melange
         uses: chainguard-dev/actions/setup-melange@805da2efdffdc42b8afd8880e575a48b471ef544 # v1.6.37
 
-      - name: Build melange package (justfile)
-        run: just melange-build
+      - name: Build & test melange package (justfile)
+        run: just melange-test
 
       - name: Build apko image
         uses: chainguard-images/actions/apko-build@main
@@ -86,8 +89,11 @@ jobs:
           config: apko.yaml
           tag: gw2wrapper:latest
 
-      - name: Smoke test image (non-root, read-only, no capabilities, no network)
-        run: |
-          image=$(docker load -i output.tar | sed -n 's/^Loaded image: //p' | tail -n1)
-          test "$(docker image inspect --format '{{.Config.User}}' "$image")" = "65532"
-          test "$(docker run --rm --read-only --cap-drop=ALL --security-opt=no-new-privileges --network=none "$image")" = "Hello, World!"
+      - name: Load image
+        run: docker load -i output.tar
+
+      - name: Image scan (Trivy)
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
+        with:
+          image-ref: ${{ env.IMAGE }}
+          trivy-config: trivy.yaml

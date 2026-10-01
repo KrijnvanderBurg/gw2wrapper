@@ -35,3 +35,17 @@ pipeline:
       output: hello-world
       prefix: usr
       install-dir: local/bin
+
+# Runs in a fresh environment containing only the built package and these extras
+test:
+  environment:
+    contents:
+      repositories:
+        - https://packages.wolfi.dev/os
+      keyring:
+        - https://packages.wolfi.dev/os/wolfi-signing.rsa.pub
+      packages:
+        - busybox
+  pipeline:
+    - runs: |
+        test "$(/usr/local/bin/hello-world)" = "Hello, World!"

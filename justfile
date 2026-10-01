@@ -48,6 +48,10 @@ melange-keygen:
 melange-build: melange-keygen
     melange build melange.yaml --arch x86_64 --signing-key melange.rsa --runner bubblewrap
 
+# Run the test pipeline from melange.yaml against the locally built package
+melange-test: melange-build
+    melange test melange.yaml --arch x86_64 --repository-append {{justfile_directory()}}/packages --keyring-append melange.rsa.pub --runner bubblewrap
+
 # Smoke test that the wolfi/apko image still builds
 apko-smoke: melange-build
     apko build apko.yaml {{image}}:test ./{{apko_tar}}
