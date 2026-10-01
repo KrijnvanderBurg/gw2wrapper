@@ -26,8 +26,6 @@ Every check is a [just](https://github.com/casey/just) recipe, run by both pre-c
   scan. On `main` and `v*` tags the multi-arch image is pushed to GHCR, keyless-signed with cosign, and gets SBOM and
   SLSA provenance attestations.
 - [maintenance.yml](.github/workflows/maintenance.yml): weekly signature check and re-scan of the published image.
-- [codeql.yml](.github/workflows/codeql.yml), [scorecard.yml](.github/workflows/scorecard.yml): CodeQL (Rust, Actions)
-  and OpenSSF Scorecard.
 - [Renovate](renovate.json) updates all pins. After a mise tool bump run `mise lock`; after a mise or Rust bump update
   `MISE_SHA256` in the devcontainer Dockerfile and the `rust-X.Y~X.Y.Z` pin in `melange.yaml` by hand.
 
