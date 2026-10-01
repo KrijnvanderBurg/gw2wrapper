@@ -2,6 +2,10 @@
 # Comprehensive dependency security and compliance checks
 # https://embarkstudios.github.io/cargo-deny/
 
+[graph]
+targets = ["x86_64-unknown-linux-gnu", "aarch64-unknown-linux-gnu"]
+all-features = true
+
 [advisories]
 db-path = "$CARGO_HOME/advisory-db"
 db-urls = ["https://github.com/rustsec/advisory-db"]
@@ -25,6 +29,22 @@ exceptions = []
 multiple-versions = "deny"
 # Deny wildcard dependencies
 wildcards = "deny"
+# Enforce rustls for TLS
+deny = [
+    { crate = "openssl", reason = "use rustls" },
+    { crate = "openssl-sys", reason = "use rustls" },
+    { crate = "native-tls", reason = "use rustls" },
+]
+
+# Build scripts run arbitrary code at compile time, so each one must be allowlisted explicitly
+[bans.build]
+allow-build-scripts = []
+executables = "deny"
+interpreted = "deny"
+include-dependencies = true
+include-workspace = true
+include-archives = true
+enable-builtin-globs = true
 
 [sources]
 # Only allow crates.io

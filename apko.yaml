@@ -5,24 +5,25 @@
 annotations:
   org.opencontainers.image.source: "https://github.com/KrijnvanderBurg/gw2wrapper"
   org.opencontainers.image.title: "gw2wrapper"
-  org.opencontainers.image.licenses: "MIT"
+  org.opencontainers.image.licenses: "Apache-2.0"
 
+# Only Wolfi packages are listed here so apko.lock.json pins them; the locally built
+# gw2wrapper package, its repo and signing key are appended by the justfile (-p/-b/-k).
 contents:
   repositories:
     - https://packages.wolfi.dev/os
-    # Local repo of packages built from melange.yaml (see justfile: melange-build)
-    - "@local ./build/packages"
 
   keyring:
     - https://packages.wolfi.dev/os/wolfi-signing.rsa.pub
-    - build/melange.rsa.pub
 
   packages:
     # Provides /etc/os-release so vulnerability scanners (Trivy/Grype) can detect the distro
     - wolfi-baselayout
     # CA certificates for HTTPS
     - ca-certificates-bundle
-    - hello-world@local
+    # Runtime libraries of the Rust binary, listed explicitly so the lockfile pins them
+    - glibc
+    - libgcc
 
 accounts:
   users:
@@ -40,17 +41,17 @@ accounts:
 
 # Root-owned and read/execute only, so the runtime user cannot modify the binary
 paths:
-  - path: /usr/local/bin/hello-world
+  - path: /usr/local/bin/gw2wrapper
     type: permissions
     uid: 0
     gid: 0
     permissions: 0o555
 
 entrypoint:
-  command: /usr/local/bin/hello-world
+  command: /usr/local/bin/gw2wrapper
 
-cmd: ""
 work-dir: /
 
 archs:
   - x86_64
+  - aarch64

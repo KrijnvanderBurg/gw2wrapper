@@ -1,17 +1,25 @@
 # Pre-commit hooks for Rust project
-# Install: pip install pre-commit && pre-commit install
+# Install: pre-commit install (installs both pre-commit and pre-push hooks)
 # Run manually: pre-commit run --all-files
 
+default_install_hook_types: [pre-commit, pre-push]
+default_stages: [pre-commit]
+
 repos:
-  # General hooks
+  # General hooks; CI runs these in the "Repository Lint" job
   - repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v4.5.0
+    rev: 3e8a8703264a2f4a69428a0aa4dcb512790b2c8c  # frozen: v6.0.0
     hooks:
       - id: trailing-whitespace
       - id: end-of-file-fixer
+      - id: mixed-line-ending
+        args: ['--fix=lf']
       - id: check-yaml
-        args: ['--unsafe']
+      - id: check-toml
       - id: check-merge-conflict
+      - id: check-added-large-files
+      - id: check-executables-have-shebangs
+      - id: check-shebang-scripts-are-executable
       - id: detect-private-key
       - id: no-commit-to-branch
         args: ['--branch', 'main']
@@ -48,6 +56,13 @@ repos:
         files: '\.rs$|(^|/)(Cargo\.(toml|lock)|justfile)$'
         pass_filenames: false
 
+      - id: cargo-doc
+        name: cargo doc
+        entry: just doc
+        language: system
+        files: '\.rs$|(^|/)(Cargo\.(toml|lock)|justfile)$'
+        pass_filenames: false
+
       # CI "Security & Dependency Audit"
       - id: cargo-deny-advisories
         name: cargo-deny (advisories)
@@ -70,10 +85,61 @@ repos:
         files: '(^|/)(Cargo\.(toml|lock)|deny\.toml|justfile)$'
         pass_filenames: false
 
-      # CI "Build & Container Verification"
+      - id: cargo-vet
+        name: cargo vet
+        entry: just vet
+        language: system
+        files: '(^|/)(Cargo\.(toml|lock)|justfile)$|^supply-chain/'
+        pass_filenames: false
+
+      # CI "Repository Lint"
+      - id: zizmor
+        name: zizmor (workflow security)
+        entry: just zizmor
+        language: system
+        files: '^\.github/|(^|/)justfile$'
+        pass_filenames: false
+
+      - id: actionlint
+        name: actionlint
+        entry: just actionlint
+        language: system
+        files: '^\.github/workflows/|(^|/)justfile$'
+        pass_filenames: false
+
+      - id: gitleaks
+        name: gitleaks (secret scan)
+        entry: just gitleaks
+        language: system
+        always_run: true
+        pass_filenames: false
+
+      - id: typos
+        name: typos (spell check)
+        entry: just typos
+        language: system
+        always_run: true
+        pass_filenames: false
+
+      - id: hadolint
+        name: hadolint
+        entry: just hadolint
+        language: system
+        files: '(^|/)(Dockerfile|justfile)$'
+        pass_filenames: false
+
+      - id: just-fmt
+        name: just --fmt
+        entry: just just-fmt
+        language: system
+        files: '(^|/)justfile$'
+        pass_filenames: false
+
+      # CI "Build & Container Verification"; on push only since it builds and scans the image
       - id: verify-image
-        name: melange test, apko build & Trivy scan
+        name: melange test, apko build, Trivy & Grype scan
         entry: just verify-image
         language: system
-        files: '\.rs$|(^|/)(Cargo\.(toml|lock)|melange\.yaml|apko\.yaml|trivy\.yaml|justfile)$'
+        files: '\.rs$|(^|/)(Cargo\.(toml|lock)|melange\.yaml|apko\.yaml|apko\.lock\.json|\.melangeignore|trivy\.yaml|\.grype\.yaml|justfile)$'
         pass_filenames: false
+        stages: [pre-push]

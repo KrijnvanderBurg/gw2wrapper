@@ -3,13 +3,13 @@
 # https://github.com/chainguard-dev/melange
 
 package:
-  name: hello-world
+  name: gw2wrapper
   version: 0.1.0
   epoch: 0
-  description: "GW2 Wrapper - Minimal secure Rust application"
+  description: "Minimal, secure Guild Wars 2 API wrapper"
   url: "https://github.com/KrijnvanderBurg/gw2wrapper"
   copyright:
-    - license: "MIT"
+    - license: "Apache-2.0"
 
 environment:
   contents:
@@ -22,19 +22,18 @@ environment:
     packages:
       - build-base
       - busybox
-      - cargo-auditable
-      - rust
+      # Must match rust-toolchain.toml and mise.toml
+      - cargo-auditable~0.7.6
+      - rust-1.98~1.98.1
       - ca-certificates-bundle
 
 # Source is this repo's root (melange mounts the directory containing this
-# file as the workspace by default), so no git-checkout step is needed.
+# file as the workspace by default, minus .melangeignore), so no git-checkout step is needed.
 pipeline:
-  - uses: cargo/build
-    with:
-      opts: --locked --release
-      output: hello-world
-      prefix: usr
-      install-dir: local/bin
+  # Same command as `just build-release`
+  - runs: |
+      cargo auditable build --locked --release
+      install -Dm755 target/release/gw2wrapper "${{targets.destdir}}/usr/local/bin/gw2wrapper"
 
 # Runs in a fresh environment containing only the built package and these extras
 test:
@@ -48,4 +47,4 @@ test:
         - busybox
   pipeline:
     - runs: |
-        test "$(/usr/local/bin/hello-world)" = "Hello, World!"
+        test "$(/usr/local/bin/gw2wrapper)" = "Hello, World!"

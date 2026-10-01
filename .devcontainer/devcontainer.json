@@ -10,13 +10,18 @@
     "remoteEnv": {
         "PATH": "/home/vscode/.local/share/mise/shims:${containerEnv:PATH}"
     },
+    // paranoid is only honoured when set globally, not from the project mise.toml
+    "containerEnv": {
+        "MISE_PARANOID": "1"
+    },
     //
     // Features - https://containers.dev/implementors/features.
     //
     "features": {
         "ghcr.io/devcontainers/features/rust:1": {},
         "ghcr.io/devcontainers/features/python:1": {},
-        "ghcr.io/devcontainers/features/docker-outside-of-docker:1": {}
+        // Isolated daemon instead of the host socket; note this feature runs the devcontainer privileged
+        "ghcr.io/devcontainers/features/docker-in-docker:2": {}
     },
     "onCreateCommand": {
         "mise-install": "mise trust && mise install"
@@ -33,7 +38,6 @@
             "extensions": [
                 // Tools
                 "eamodio.gitlens", // https://marketplace.visualstudio.com/items?itemName=eamodio.gitlens
-                "ms-azure-devops.azuredevops", // https://marketplace.visualstudio.com/items?itemName=ms-azure-devops.azuredevops
                 // Rust
                 "rust-lang.rust-analyzer", // https://marketplace.visualstudio.com/items?itemName=rust-lang.rust-analyzer
                 // Copilot

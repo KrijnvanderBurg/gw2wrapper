@@ -1,4 +1,4 @@
-# Trivy settings for the gw2wrapper image (CI, or locally: trivy image --config trivy.yaml <image>)
+# Trivy settings for the gw2wrapper image (see justfile: scan)
 # https://trivy.dev/latest/docs/references/configuration/config-file/
 
 exit-code: 1

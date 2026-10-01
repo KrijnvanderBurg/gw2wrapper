@@ -1,0 +1,3 @@
+[files]
+# Generated lockfiles contain checksums and keys
+extend-exclude = ["*.lock", "*.lock.json", "supply-chain/imports.lock"]

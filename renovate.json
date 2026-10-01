@@ -1,0 +1,58 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": ["config:best-practices"],
+  "labels": ["dependencies"],
+  "minimumReleaseAge": "3 days",
+  "osvVulnerabilityAlerts": true,
+  "vulnerabilityAlerts": { "enabled": true },
+  "lockFileMaintenance": { "enabled": true },
+  "pre-commit": { "enabled": true },
+  "customManagers": [
+    {
+      "customType": "regex",
+      "description": "Rust toolchain; the rust-X.Y~X.Y.Z pin in melange.yaml must be updated by hand on this PR",
+      "managerFilePatterns": ["/^rust-toolchain\\.toml$/"],
+      "matchStrings": ["channel = \"(?<currentValue>\\d+\\.\\d+\\.\\d+)\""],
+      "depNameTemplate": "rust",
+      "packageNameTemplate": "rust-lang/rust",
+      "datasourceTemplate": "github-releases"
+    },
+    {
+      "customType": "regex",
+      "description": "mise itself, pinned in mise.toml, the devcontainer and workflows",
+      "managerFilePatterns": [
+        "/^mise\\.toml$/",
+        "/^\\.devcontainer/Dockerfile$/",
+        "/^\\.github/workflows/.+\\.ya?ml$/"
+      ],
+      "matchStrings": [
+        "min_version = \"(?<currentValue>[^\"]+)\"",
+        "ARG MISE_VERSION=(?<currentValue>\\S+)",
+        "uses: jdx/mise-action@\\S+.*\\n\\s+with:\\n\\s+version: (?<currentValue>\\S+)"
+      ],
+      "depNameTemplate": "mise",
+      "packageNameTemplate": "jdx/mise",
+      "datasourceTemplate": "github-releases",
+      "extractVersionTemplate": "^v(?<version>.+)$"
+    },
+    {
+      "customType": "regex",
+      "description": "cargo-auditable inside the melange build environment",
+      "managerFilePatterns": ["/^melange\\.yaml$/"],
+      "matchStrings": ["- cargo-auditable~(?<currentValue>\\S+)"],
+      "depNameTemplate": "cargo-auditable",
+      "datasourceTemplate": "crate"
+    }
+  ],
+  "packageRules": [
+    {
+      "description": "MISE_SHA256 in the devcontainer Dockerfile must be updated by hand on this PR",
+      "matchDepNames": ["mise"],
+      "groupName": "mise"
+    },
+    {
+      "matchPackageNames": ["cargo-auditable", "cargo:cargo-auditable"],
+      "groupName": "cargo-auditable"
+    }
+  ]
+}
