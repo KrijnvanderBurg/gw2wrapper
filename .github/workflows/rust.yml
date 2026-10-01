@@ -13,7 +13,7 @@ permissions:
 jobs:
   check:
     name: Check, Test & Lint
-    runs-on: ubuntu-26.04
+    runs-on: ubuntu-24.04
     steps:
       - name: Checkout code
         uses: actions/checkout@v7
@@ -40,7 +40,7 @@ jobs:
 
   security:
     name: Security & Dependency Audit
-    runs-on: ubuntu-26.04
+    runs-on: ubuntu-24.04
     steps:
       - name: Checkout code
         uses: actions/checkout@v7
@@ -65,7 +65,8 @@ jobs:
 
   build:
     name: Build & Container Verification
-    runs-on: ubuntu-26.04
+    # setup-melange installs qemu-user-static, which has no installation candidate on 24.04
+    runs-on: ubuntu-24.04
     steps:
       - name: Checkout code
         uses: actions/checkout@v7
