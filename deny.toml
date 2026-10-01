@@ -14,18 +14,9 @@ ignore = []
 # All licenses are denied unless explicitly allowed, so there is no need for
 # a separate GPL/AGPL/SSPL deny list (see https://github.com/EmbarkStudios/cargo-deny/pull/611)
 allow = [
-    "MIT",
-    "Apache-2.0",
-    "Apache-2.0 WITH LLVM-exception",
-    "BSD-2-Clause",
-    "BSD-3-Clause",
-    "0BSD",
-    "ISC",
-    "MPL-2.0",
-    "Unicode-DFS-2016",
+    "Apache-2.0"
 ]
-# Don't warn about allowed licenses not yet used by any dependency
-unused-allowed-license = "warn"
+unused-allowed-license = "deny"
 confidence-threshold = 0.8
 exceptions = []
 
