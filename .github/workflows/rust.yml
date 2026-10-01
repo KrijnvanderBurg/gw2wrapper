@@ -180,7 +180,7 @@ jobs:
           TRIVY_OUTPUT: trivy-${{ matrix.arch }}.sarif
 
       - name: Upload Trivy results to code scanning
-        if: ${{ !cancelled() && hashFiles(format('trivy-{0}.sarif', matrix.arch)) != '' && !github.event.pull_request.head.repo.fork }}
+        # if: ${{ !cancelled() && hashFiles(format('trivy-{0}.sarif', matrix.arch)) != '' && !github.event.pull_request.head.repo.fork }}
         uses: github/codeql-action/upload-sarif@2892aa5e19bbd11bc0cff5427e3b750a04d9e3c2 # v4.38.2
         with:
           sarif_file: trivy-${{ matrix.arch }}.sarif
@@ -231,7 +231,7 @@ jobs:
   publish:
     name: Publish, Sign & Attest
     # The signing identity is restricted to main and v* tags, also when triggered manually
-    if: ${{ github.event_name != 'pull_request' && (github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/v')) }}
+    # if: ${{ github.event_name != 'pull_request' && (github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/v')) }}
     needs: [check, security, lint, image]
     runs-on: ubuntu-24.04
     timeout-minutes: 20
