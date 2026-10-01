@@ -230,8 +230,8 @@ jobs:
 
   publish:
     name: Publish, Sign & Attest
-    # The signing identity is restricted to main and v* tags, also when triggered manually
-    # if: ${{ github.event_name != 'pull_request' && (github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/v')) }}
+    # Release builds (main/tags) always publish; PRs publish an RC image but only from same-repo branches, never forks
+    if: ${{ github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/v') || (github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository) }}
     needs: [check, security, lint, image]
     runs-on: ubuntu-24.04
     timeout-minutes: 20

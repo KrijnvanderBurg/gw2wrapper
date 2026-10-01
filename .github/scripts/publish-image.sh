@@ -5,6 +5,9 @@ set -euo pipefail
 refs=("${IMAGE}:$(git rev-parse --short=12 HEAD)")
 if [[ "$GITHUB_REF" == refs/tags/v* ]]; then
     refs+=("${IMAGE}:${GITHUB_REF_NAME#v}")
+elif [[ "$GITHUB_REF" =~ ^refs/pull/([0-9]+)/merge$ ]]; then
+    version="$(grep -m1 '^version = ' Cargo.toml | cut -d'"' -f2)"
+    refs+=("${IMAGE}:${version}-rc.pr${BASH_REMATCH[1]}")
 else
     refs+=("${IMAGE}:latest")
 fi
