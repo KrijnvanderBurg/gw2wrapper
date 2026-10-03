@@ -128,6 +128,7 @@ _apko pkgdir tarfile sbomdir:
 
 # Assemble the multi-arch image from per-arch packages (CI "Multi-arch Image"; same inputs as publish-image.sh, without pushing)
 image-multiarch:
+    mkdir -p {{ out }}/sbom
     apko build apko.yaml {{ image }}:{{ tag }} {{ out }}/{{ image }}.tar -b {{ out }}/packages -k {{ out }}/melange-x86_64.rsa.pub -k {{ out }}/melange-aarch64.rsa.pub -p {{ image }} --sbom-path {{ out }}/sbom
 
 # Scan the image tarball with two independent vulnerability databases

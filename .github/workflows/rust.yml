@@ -115,7 +115,7 @@ jobs:
         uses: jdx/mise-action@7a4e45a543138629540c9a1616d08632b893e492 # v5.0.1 # zizmor: ignore[cache-poisoning]
         with:
           version: 2026.9.18
-          install_args: just actionlint shellcheck zizmor gitleaks typos hadolint yamllint taplo committed
+          install_args: just actionlint shellcheck zizmor gitleaks typos hadolint uv yamllint taplo committed
           cache: true
 
       - name: Zizmor
