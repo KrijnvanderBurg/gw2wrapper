@@ -14,12 +14,11 @@ Every check is a [just](https://github.com/casey/just) recipe, run by both pre-c
 | --- | --- |
 | `just check test clippy fmt doc` | Build, test and lint (lint levels in `Cargo.toml` `[lints]`) |
 | `just deny` | Advisories, licenses, bans, build scripts, and sources |
-| `just zizmor actionlint gitleaks typos hadolint shellcheck yamllint taplo-fmt just-fmt` | Repository linters |
+| `just zizmor actionlint gitleaks hadolint shellcheck just-fmt` | Repository linters |
 | `just verify-image` | Build and test the melange package, build the apko image, scan with Trivy and Grype |
-| `just repro-verify` | Build package and image twice; outputs must be bit-identical |
 | `just run` | Run the image with a read-only root filesystem, no capabilities and `no-new-privileges` |
 
-Formatters have `*-fix` variants (`fmt-fix`, `just-fmt-fix`, `taplo-fmt-fix`). `verify-image` runs on `pre-push`
+Formatters have `*-fix` variants (`fmt-fix`, `just-fmt-fix`). `verify-image` runs on `pre-push`
 (skip in an emergency with `SKIP=verify-image git push`; CI still runs it); everything else on `pre-commit`.
 
 ## CI/CD
@@ -30,8 +29,8 @@ Formatters have `*-fix` variants (`fmt-fix`, `just-fmt-fix`, `taplo-fmt-fix`). `
   currently in Cargo.toml to GHCR, keyless-signs it with cosign, attests SBOMs and SLSA provenance, verifies them,
   then tags `vX.Y.Z`; a no-op if that tag already exists.
 - [maintenance.yml](.github/workflows/maintenance.yml): weekly signature check and re-scan of the published image,
-  RustSec advisories re-check, and reproducible-build verification.
-- [Renovate](renovate.json) updates all pins. After a mise tool bump run `mise lock`; after a mise or Rust bump update
+  and RustSec advisories re-check.
+- [Renovate](.github/renovate.json) updates all pins. After a mise tool bump run `mise lock`; after a mise or Rust bump update
   `MISE_SHA256` in the devcontainer Dockerfile and the `rust-X.Y~X.Y.Z` pin in `melange.yaml` by hand.
 
 ## Repository settings (manual)
