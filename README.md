@@ -23,11 +23,12 @@ Formatters have `*-fix` variants (`fmt-fix`, `just-fmt-fix`). `verify-image` run
 
 ## CI/CD
 
-- [rust.yml](.github/workflows/rust.yml): CI on PRs and `main` — checks, audits, repository lint, a native
-  x86_64/aarch64 image build and scan, and multi-arch image assembly. Nothing is published.
-- [release.yml](.github/workflows/release.yml): manual dispatch from `main` only. Builds and publishes the version
-  currently in Cargo.toml to GHCR, keyless-signs it with cosign, attests SBOMs and SLSA provenance, verifies them,
-  then tags `vX.Y.Z`; a no-op if that tag already exists.
+- [verify.yml](.github/workflows/verify.yml): reusable verification template — checks, audits, repository lint, a
+  native x86_64/aarch64 image build and scan, and multi-arch image assembly. Nothing is published.
+- [ci.yml](.github/workflows/ci.yml): runs the verification template on PRs and `main`.
+- [release.yml](.github/workflows/release.yml): manual dispatch from `main` only. Re-runs the full verification
+  template, then publishes the version currently in Cargo.toml to GHCR, keyless-signs it with cosign, attests SBOMs
+  and SLSA provenance, verifies them, then tags `vX.Y.Z`; a no-op if that tag already exists.
 - [maintenance.yml](.github/workflows/maintenance.yml): weekly signature check and re-scan of the published image,
   and RustSec advisories re-check.
 - [Renovate](.github/renovate.json) updates all pins. After a mise tool bump run `mise lock`; after a mise or Rust bump update

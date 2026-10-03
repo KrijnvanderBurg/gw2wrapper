@@ -23,7 +23,7 @@
       "managerFilePatterns": [
         "/^mise\\.toml$/",
         "/^\\.devcontainer/Dockerfile$/",
-        "/^\\.github/workflows/.+\\.ya?ml$/"
+        "/^\\.github/(workflows|actions)/.+\\.ya?ml$/"
       ],
       "matchStrings": [
         "min_version = \"(?<currentValue>[^\"]+)\"",

@@ -15,6 +15,7 @@ concurrency:
 env:
   MISE_PARANOID: "1"
   CARGO_TERM_COLOR: always
+  IMAGE: ghcr.io/krijnvanderburg/gw2wrapper
 
 jobs:
   version:
@@ -27,6 +28,13 @@ jobs:
       version: ${{ steps.version.outputs.version }}
       exists: ${{ steps.version.outputs.exists }}
     steps:
+      # Signature verification pins the identity to main, so releasing elsewhere would publish then fail
+      - name: Require main
+        if: ${{ github.ref != 'refs/heads/main' }}
+        run: |
+          echo "Releases must be dispatched from main (got $GITHUB_REF)" >&2
+          exit 1
+
       - name: Checkout code
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -44,58 +52,19 @@ jobs:
           fi
           echo "version=${version}" >> "$GITHUB_OUTPUT"
 
-  build:
-    name: Build & Verify (${{ matrix.arch }})
+  # Full verification via the same template as CI; its build jobs upload the melange packages
+  verify:
+    name: Verify
     needs: [version]
     if: ${{ needs.version.outputs.exists == 'false' }}
-    # Native runners per arch: melange's bubblewrap runner cannot cross-build
-    runs-on: ${{ matrix.runner }}
-    timeout-minutes: 45
-    strategy:
-      fail-fast: true
-      matrix:
-        include:
-          - arch: x86_64
-            runner: ubuntu-24.04
-          - arch: aarch64
-            runner: ubuntu-24.04-arm
+    uses: ./.github/workflows/verify.yml
     permissions:
       contents: read
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          persist-credentials: false
-
-      - name: Install tools (mise.toml)
-        # Artifact path: no caches, tools are checksum-verified downloads on every run
-        uses: jdx/mise-action@7a4e45a543138629540c9a1616d08632b893e492 # v5.0.1
-        with:
-          version: 2026.9.18
-          install_args: just melange apko trivy grype
-          cache: false
-
-      - name: Setup bubblewrap
-        uses: ./.github/actions/setup-bubblewrap
-
-      # Same recipe as CI: melange test, apko build, Trivy & Grype scan
-      - name: Test package, build image & scan (justfile)
-        run: just verify-image
-
-      # Public key and signed packages only; the ephemeral private key never leaves the runner
-      - name: Upload melange packages
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
-        with:
-          name: packages-${{ matrix.arch }}
-          path: |
-            build/packages/${{ matrix.arch }}
-            build/melange-${{ matrix.arch }}.rsa.pub
-          if-no-files-found: error
-          retention-days: 1
+      security-events: write # Trivy/Grype SARIF upload in the build job
 
   publish:
     name: Publish, Sign & Attest
-    needs: [version, build]
+    needs: [version, verify]
     runs-on: ubuntu-24.04
     timeout-minutes: 20
     environment: release
@@ -113,11 +82,10 @@ jobs:
 
       - name: Install tools (mise.toml)
         # Artifact path: no caches, tools are checksum-verified downloads on every run
-        uses: jdx/mise-action@7a4e45a543138629540c9a1616d08632b893e492 # v5.0.1
+        uses: ./.github/actions/setup-tools
         with:
-          version: 2026.9.18
-          install_args: apko cosign
-          cache: false
+          tools: apko cosign
+          cache: "false"
 
       - name: Download melange packages
         uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
@@ -135,19 +103,19 @@ jobs:
         id: publish
         uses: ./.github/actions/publish-image
         with:
-          image: ghcr.io/krijnvanderburg/gw2wrapper
+          image: ${{ env.IMAGE }}
 
       - name: Attest build provenance (SLSA)
         uses: actions/attest-build-provenance@4d101475d8b20a2381f78447822ac1eab6504dd8 # v4.2.2
         with:
-          subject-name: ghcr.io/krijnvanderburg/gw2wrapper
+          subject-name: ${{ env.IMAGE }}
           subject-digest: ${{ steps.publish.outputs.digest }}
           push-to-registry: true
 
       - name: Verify signature & SBOM attestation
         uses: ./.github/actions/verify-image-signature
         with:
-          image-ref: ghcr.io/krijnvanderburg/gw2wrapper@${{ steps.publish.outputs.digest }}
+          image-ref: ${{ env.IMAGE }}@${{ steps.publish.outputs.digest }}
 
       # Tag last, so a failed release can simply be re-run
       - name: Tag release

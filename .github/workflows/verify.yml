@@ -1,18 +1,14 @@
-name: Rust CICD
+name: Verify
 
+# Reusable verification template: full test, lint, audit, build and scan.
+# Called by ci.yml (PRs, main) and release.yml (before publishing).
+# Uploads the signed melange packages as artifacts for the caller to publish.
 on:
-  pull_request:
-    types: [opened, synchronize, reopened]
-  push:
-    branches: [main]
-  workflow_dispatch:
+  workflow_call:
 
 permissions: {}
 
-concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
-
+# Not inherited from the caller; must be set here
 env:
   MISE_PARANOID: "1"
   CARGO_TERM_COLOR: always
@@ -35,11 +31,9 @@ jobs:
 
       - name: Install tools (mise.toml)
         # Gate job: nothing built here is published, and mise.lock checksums + MISE_PARANOID verify installs
-        uses: jdx/mise-action@7a4e45a543138629540c9a1616d08632b893e492 # v5.0.1
+        uses: ./.github/actions/setup-tools
         with:
-          version: 2026.9.18
-          install_args: just
-          cache: true
+          tools: just
 
       - name: Cache cargo registry & target
         # Gate job: published artifacts are rebuilt hermetically inside the melange sandbox
@@ -77,11 +71,9 @@ jobs:
 
       - name: Install tools (mise.toml)
         # Gate job: nothing built here is published, and mise.lock checksums + MISE_PARANOID verify installs
-        uses: jdx/mise-action@7a4e45a543138629540c9a1616d08632b893e492 # v5.0.1
+        uses: ./.github/actions/setup-tools
         with:
-          version: 2026.9.18
-          install_args: just cargo-deny
-          cache: true
+          tools: just cargo-deny
 
       - name: Cache cargo registry & target
         # Gate job: published artifacts are rebuilt hermetically inside the melange sandbox
@@ -112,11 +104,9 @@ jobs:
 
       - name: Install tools (mise.toml)
         # Gate job: nothing built here is published, and mise.lock checksums + MISE_PARANOID verify installs
-        uses: jdx/mise-action@7a4e45a543138629540c9a1616d08632b893e492 # v5.0.1
+        uses: ./.github/actions/setup-tools
         with:
-          version: 2026.9.18
-          install_args: just actionlint shellcheck zizmor gitleaks hadolint
-          cache: true
+          tools: just actionlint shellcheck zizmor gitleaks hadolint
 
       - name: Zizmor
         run: just zizmor
@@ -163,11 +153,10 @@ jobs:
 
       - name: Install tools (mise.toml)
         # Artifact path: no caches, tools are checksum-verified downloads on every run
-        uses: jdx/mise-action@7a4e45a543138629540c9a1616d08632b893e492 # v5.0.1
+        uses: ./.github/actions/setup-tools
         with:
-          version: 2026.9.18
-          install_args: just melange apko trivy grype
-          cache: false
+          tools: just melange apko trivy grype
+          cache: "false"
 
       - name: Setup bubblewrap
         uses: ./.github/actions/setup-bubblewrap
@@ -219,11 +208,10 @@ jobs:
 
       - name: Install tools (mise.toml)
         # Artifact path: no caches, tools are checksum-verified downloads on every run
-        uses: jdx/mise-action@7a4e45a543138629540c9a1616d08632b893e492 # v5.0.1
+        uses: ./.github/actions/setup-tools
         with:
-          version: 2026.9.18
-          install_args: just apko
-          cache: false
+          tools: just apko
+          cache: "false"
 
       - name: Download melange packages
         uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
