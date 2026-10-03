@@ -1,8 +1,8 @@
 # Pre-commit hooks for Rust project
-# Install: pre-commit install (installs both pre-commit and pre-push hooks)
+# Install: pre-commit install (installs the pre-commit, commit-msg and pre-push hooks)
 # Run manually: pre-commit run --all-files
 
-default_install_hook_types: [pre-commit, pre-push]
+default_install_hook_types: [pre-commit, commit-msg, pre-push]
 default_stages: [pre-commit]
 
 repos:
@@ -14,8 +14,6 @@ repos:
       - id: end-of-file-fixer
       - id: mixed-line-ending
         args: ['--fix=lf']
-      - id: check-yaml
-      - id: check-toml
       - id: check-merge-conflict
       - id: check-added-large-files
       - id: check-executables-have-shebangs
@@ -121,6 +119,27 @@ repos:
         files: '(^|/)(Dockerfile|justfile)$'
         pass_filenames: false
 
+      - id: shellcheck
+        name: shellcheck
+        entry: just shellcheck
+        language: system
+        files: '\.sh$|(^|/)justfile$'
+        pass_filenames: false
+
+      - id: yamllint
+        name: yamllint
+        entry: just yamllint
+        language: system
+        files: '\.ya?ml$|(^|/)justfile$'
+        pass_filenames: false
+
+      - id: taplo-fmt
+        name: taplo fmt (check)
+        entry: just taplo-fmt
+        language: system
+        files: '\.toml$|(^|/)justfile$'
+        pass_filenames: false
+
       - id: just-fmt
         name: just --fmt
         entry: just just-fmt
@@ -128,7 +147,15 @@ repos:
         files: '(^|/)justfile$'
         pass_filenames: false
 
-      # CI "Build & Container Verification"; on push only since it builds and scans the image
+      # Commit-message policy (committed.toml); CI lints the full PR range via `just commit-lint`
+      - id: committed
+        name: committed (commit message)
+        entry: committed --commit-file
+        language: system
+        stages: [commit-msg]
+
+      # CI "Build & Container Verification"; on push only since it builds and scans the image.
+      # Escape hatch for emergencies (CI still runs it): SKIP=verify-image git push
       - id: verify-image
         name: melange test, apko build, Trivy & Grype scan
         entry: just verify-image

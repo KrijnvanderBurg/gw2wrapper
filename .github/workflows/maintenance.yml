@@ -29,12 +29,14 @@ jobs:
         with:
           version: 2026.9.18
           install_args: cosign trivy grype
+          cache: true
 
       - name: Log in to GHCR
         run: cosign login ghcr.io --username "$GITHUB_ACTOR" --password-stdin <<< "$GITHUB_TOKEN"
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
+      # latest tracks the most recent release published by release.yml
       - name: Verify signature & SBOM attestation
         uses: ./.github/actions/verify-image-signature
         with:
@@ -45,3 +47,55 @@ jobs:
 
       - name: Scan with Grype
         run: grype --config .grype.yaml registry:ghcr.io/krijnvanderburg/gw2wrapper:latest
+
+  advisories:
+    name: Dependency advisories re-check
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Install Rust (rust-toolchain.toml)
+        run: rustup toolchain install
+
+      - name: Install tools (mise.toml)
+        uses: jdx/mise-action@7a4e45a543138629540c9a1616d08632b893e492 # v5.0.1
+        with:
+          version: 2026.9.18
+          install_args: just cargo-deny
+          cache: true
+
+      # New RustSec advisories surface between pushes; CI only checks on code changes
+      - name: Cargo deny (advisories)
+        run: just deny-advisories
+
+  repro:
+    name: Reproducible build verification
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Install tools (mise.toml)
+        uses: jdx/mise-action@7a4e45a543138629540c9a1616d08632b893e492 # v5.0.1
+        with:
+          version: 2026.9.18
+          install_args: just melange apko
+          cache: true
+
+      - name: Setup bubblewrap
+        uses: ./.github/actions/setup-bubblewrap
+
+      # Two independent builds must produce bit-identical image tarballs (SOURCE_DATE_EPOCH)
+      - name: Verify reproducibility
+        run: just repro-verify

@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
-# Verifies that an image was signed, with SBOM attestation, by rust.yml on main, a version tag, or a manually dispatched RC build.
+# Verifies that an image was signed, with SBOM attestation, by release.yml dispatched from main.
 set -euo pipefail
 
-identity='^https://github\.com/KrijnvanderBurg/gw2wrapper/\.github/workflows/rust\.yml@refs/(heads/.+|tags/v.+)$'
+identity='^https://github\.com/KrijnvanderBurg/gw2wrapper/\.github/workflows/release\.yml@refs/heads/main$'
 issuer="https://token.actions.githubusercontent.com"
 
 cosign verify --certificate-identity-regexp "$identity" --certificate-oidc-issuer "$issuer" "$1" > /dev/null

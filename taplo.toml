@@ -1,0 +1,17 @@
+# taplo TOML formatter/linter configuration (see justfile: taplo-fmt)
+# https://taplo.tamasfe.dev/configuration/file.html
+
+include = ["**/*.toml"]
+# Generated lockfiles and build outputs are not formatted
+exclude = ["Cargo.lock", "mise.lock", "target/**", "build/**"]
+
+[formatting]
+# Match .editorconfig: 2-space indent, LF, final newline
+indent_string = "  "
+crlf = false
+trailing_newline = true
+# Keep author-chosen entry order; reordering tables/keys would hurt diff review
+reorder_keys = false
+reorder_arrays = false
+# Keep author-chosen multi-line arrays (e.g. deny.toml ban list)
+array_auto_collapse = false

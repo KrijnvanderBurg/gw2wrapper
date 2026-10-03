@@ -1,0 +1,8 @@
+# committed commit-message policy (see justfile: commit-lint)
+# https://github.com/crate-ci/committed
+
+style = "conventional"
+# Conventional-commit descriptions are conventionally lowercase ("feat: add x")
+subject_capitalized = false
+# Auto-generated merge commits (e.g. GitHub merge queue) are exempt from the style check
+merge_commit = true

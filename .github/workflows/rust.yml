@@ -2,16 +2,10 @@ name: Rust CICD
 
 on:
   pull_request:
-    types: [opened, synchronize, reopened, closed]
+    types: [opened, synchronize, reopened]
   push:
     branches: [main]
-    tags: ['v*']
   workflow_dispatch:
-    inputs:
-      publish:
-        description: Publish an RC image to GHCR from this ref
-        type: boolean
-        default: false
 
 permissions: {}
 
@@ -40,11 +34,16 @@ jobs:
         run: rustup toolchain install
 
       - name: Install tools (mise.toml)
-        uses: jdx/mise-action@7a4e45a543138629540c9a1616d08632b893e492 # v5.0.1
+        # Gate job: nothing built here is published, and mise.lock checksums + MISE_PARANOID verify installs
+        uses: jdx/mise-action@7a4e45a543138629540c9a1616d08632b893e492 # v5.0.1 # zizmor: ignore[cache-poisoning]
         with:
           version: 2026.9.18
           install_args: just
-          cache: false
+          cache: true
+
+      - name: Cache cargo registry & target
+        # Gate job: published artifacts are rebuilt hermetically inside the melange sandbox
+        uses: Swatinem/rust-cache@6323deb102c322ba6fcbdcafc7e3dddab59af2b6 # v2.9.2 # zizmor: ignore[cache-poisoning]
 
       - name: Cargo check
         run: just check
@@ -77,11 +76,16 @@ jobs:
         run: rustup toolchain install
 
       - name: Install tools (mise.toml)
-        uses: jdx/mise-action@7a4e45a543138629540c9a1616d08632b893e492 # v5.0.1
+        # Gate job: nothing built here is published, and mise.lock checksums + MISE_PARANOID verify installs
+        uses: jdx/mise-action@7a4e45a543138629540c9a1616d08632b893e492 # v5.0.1 # zizmor: ignore[cache-poisoning]
         with:
           version: 2026.9.18
           install_args: just cargo-deny
-          cache: false
+          cache: true
+
+      - name: Cache cargo registry & target
+        # Gate job: published artifacts are rebuilt hermetically inside the melange sandbox
+        uses: Swatinem/rust-cache@6323deb102c322ba6fcbdcafc7e3dddab59af2b6 # v2.9.2 # zizmor: ignore[cache-poisoning]
 
       - name: Cargo deny (advisories)
         run: just deny-advisories
@@ -107,11 +111,12 @@ jobs:
           fetch-depth: 0
 
       - name: Install tools (mise.toml)
-        uses: jdx/mise-action@7a4e45a543138629540c9a1616d08632b893e492 # v5.0.1
+        # Gate job: nothing built here is published, and mise.lock checksums + MISE_PARANOID verify installs
+        uses: jdx/mise-action@7a4e45a543138629540c9a1616d08632b893e492 # v5.0.1 # zizmor: ignore[cache-poisoning]
         with:
           version: 2026.9.18
-          install_args: just actionlint shellcheck zizmor gitleaks typos hadolint pre-commit
-          cache: false
+          install_args: just actionlint shellcheck zizmor gitleaks typos hadolint yamllint taplo committed
+          cache: true
 
       - name: Zizmor
         run: just zizmor
@@ -130,6 +135,22 @@ jobs:
 
       - name: Hadolint
         run: just hadolint
+
+      - name: Shellcheck
+        run: just shellcheck
+
+      - name: Yamllint
+        run: just yamllint
+
+      - name: Taplo (TOML format)
+        run: just taplo-fmt
+
+      - name: Committed (commit messages)
+        if: ${{ github.event_name == 'pull_request' }}
+        run: just commit-lint "${BASE_SHA}..${HEAD_SHA}"
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
 
       - name: Justfile format
         run: just just-fmt
@@ -157,39 +178,36 @@ jobs:
           persist-credentials: false
 
       - name: Install tools (mise.toml)
+        # Artifact path: no caches, tools are checksum-verified downloads on every run
         uses: jdx/mise-action@7a4e45a543138629540c9a1616d08632b893e492 # v5.0.1
         with:
           version: 2026.9.18
           install_args: just melange apko trivy grype
           cache: false
 
-      # Official fix from melange for Ubuntu 24.04: https://github.com/chainguard-dev/melange/issues/1508
-      - name: Install bubblewrap
-        run: |
-          sudo apt-get update
-          sudo apt-get install --yes --no-install-recommends bubblewrap
-          sudo tee /etc/apparmor.d/local-bwrap > /dev/null <<'EOF'
-          abi <abi/4.0>,
-          include <tunables/global>
-          profile local-bwrap /usr/bin/bwrap flags=(unconfined) {
-            userns,
-            include if exists <local/bwrap>
-          }
-          EOF
-          sudo systemctl reload apparmor
+      - name: Setup bubblewrap
+        uses: ./.github/actions/setup-bubblewrap
 
       - name: Test package, build image & scan with Trivy and Grype (justfile)
         run: just verify-image
         env:
           TRIVY_FORMAT: sarif
           TRIVY_OUTPUT: trivy-${{ matrix.arch }}.sarif
+          GRYPE_OUTPUT: sarif=grype-${{ matrix.arch }}.sarif
 
       - name: Upload Trivy results to code scanning
-        # if: ${{ !cancelled() && hashFiles(format('trivy-{0}.sarif', matrix.arch)) != '' && !github.event.pull_request.head.repo.fork }}
+        if: ${{ !cancelled() && hashFiles(format('trivy-{0}.sarif', matrix.arch)) != '' && !github.event.pull_request.head.repo.fork }}
         uses: github/codeql-action/upload-sarif@2892aa5e19bbd11bc0cff5427e3b750a04d9e3c2 # v4.38.2
         with:
           sarif_file: trivy-${{ matrix.arch }}.sarif
           category: trivy-${{ matrix.arch }}
+
+      - name: Upload Grype results to code scanning
+        if: ${{ !cancelled() && hashFiles(format('grype-{0}.sarif', matrix.arch)) != '' && !github.event.pull_request.head.repo.fork }}
+        uses: github/codeql-action/upload-sarif@2892aa5e19bbd11bc0cff5427e3b750a04d9e3c2 # v4.38.2
+        with:
+          sarif_file: grype-${{ matrix.arch }}.sarif
+          category: grype-${{ matrix.arch }}
 
       # Public key and signed packages only; the ephemeral private key never leaves the runner
       - name: Upload melange packages
@@ -216,10 +234,11 @@ jobs:
           persist-credentials: false
 
       - name: Install tools (mise.toml)
+        # Artifact path: no caches, tools are checksum-verified downloads on every run
         uses: jdx/mise-action@7a4e45a543138629540c9a1616d08632b893e492 # v5.0.1
         with:
           version: 2026.9.18
-          install_args: apko
+          install_args: just apko
           cache: false
 
       - name: Download melange packages
@@ -229,79 +248,23 @@ jobs:
           path: build
           merge-multiple: true
 
-      # Same inputs as publish-image.sh, without pushing
+      # Same inputs as publish-image.sh, without pushing; justfile sets SOURCE_DATE_EPOCH for reproducibility
       - name: Build multi-arch image
-        run: apko build apko.yaml gw2wrapper:ci build/gw2wrapper.tar -b build/packages -k build/melange-x86_64.rsa.pub -k build/melange-aarch64.rsa.pub -p gw2wrapper
+        run: just image-multiarch
 
-  publish:
-    name: Publish, Sign & Attest
-    # Release builds (main/tags) always publish; a manual dispatch can opt in to publish an RC image from any branch
-    if: ${{ github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/v') || (github.event_name == 'workflow_dispatch' && inputs.publish) }}
-    needs: [check, security, lint, image]
-    runs-on: ubuntu-24.04
-    timeout-minutes: 20
-    environment: release
-    permissions:
-      contents: read
-      packages: write
-      id-token: write
-      attestations: write
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          persist-credentials: false
-
-      - name: Install tools (mise.toml)
-        uses: jdx/mise-action@7a4e45a543138629540c9a1616d08632b893e492 # v5.0.1
-        with:
-          version: 2026.9.18
-          install_args: apko cosign
-          cache: false
-
-      - name: Download melange packages
-        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
-        with:
-          pattern: packages-*
-          path: build
-          merge-multiple: true
-
-      - name: Log in to GHCR
-        run: cosign login ghcr.io --username "$GITHUB_ACTOR" --password-stdin <<< "$GITHUB_TOKEN"
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Publish, sign & attest SBOMs
-        id: publish
-        uses: ./.github/actions/publish-image
-        with:
-          image: ghcr.io/krijnvanderburg/gw2wrapper
-
-      - name: Attest build provenance (SLSA)
-        uses: actions/attest-build-provenance@4d101475d8b20a2381f78447822ac1eab6504dd8 # v4.2.2
-        with:
-          subject-name: ghcr.io/krijnvanderburg/gw2wrapper
-          subject-digest: ${{ steps.publish.outputs.digest }}
-          push-to-registry: true
-
-      - name: Verify signature & SBOM attestation
-        uses: ./.github/actions/verify-image-signature
-        with:
-          image-ref: ghcr.io/krijnvanderburg/gw2wrapper@${{ steps.publish.outputs.digest }}
-
-  # cleanup:
-  #   name: Prune Untagged Package Versions
-  #   runs-on: ubuntu-24.04
-  #   timeout-minutes: 10
-  #   permissions:
-  #     packages: write
-  #   steps:
-  #     # Requires a PAT with packages:delete scope; GITHUB_TOKEN cannot delete package versions
-  #     - name: Delete untagged versions older than 7 days
-  #       uses: snok/container-retention-policy@d3bdcf5ce9b05f685154e4a16c39233b245e3d53 # v3.1.0
-  #       with:
-  #         account: user
-  #         token: ${{ secrets.PACKAGES_DELETE_TOKEN }}
-  #         image-names: gw2wrapper
-  #         tag-selection: untagged
-  #         cut-off: 7d
+# cleanup:
+#   name: Prune Untagged Package Versions
+#   runs-on: ubuntu-24.04
+#   timeout-minutes: 10
+#   permissions:
+#     packages: write
+#   steps:
+#     # Requires a PAT with packages:delete scope; GITHUB_TOKEN cannot delete package versions
+#     - name: Delete untagged versions older than 7 days
+#       uses: snok/container-retention-policy@d3bdcf5ce9b05f685154e4a16c39233b245e3d53 # v3.1.0
+#       with:
+#         account: user
+#         token: ${{ secrets.PACKAGES_DELETE_TOKEN }}
+#         image-names: gw2wrapper
+#         tag-selection: untagged
+#         cut-off: 7d

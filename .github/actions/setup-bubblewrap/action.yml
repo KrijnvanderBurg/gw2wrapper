@@ -1,0 +1,21 @@
+name: Setup bubblewrap
+description: Install bubblewrap and the AppArmor profile melange needs on Ubuntu 24.04 runners
+
+# Official fix from melange for Ubuntu 24.04: https://github.com/chainguard-dev/melange/issues/1508
+runs:
+  using: composite
+  steps:
+    - name: Install bubblewrap
+      shell: bash
+      run: |
+        sudo apt-get update
+        sudo apt-get install --yes --no-install-recommends bubblewrap
+        sudo tee /etc/apparmor.d/local-bwrap > /dev/null <<'EOF'
+        abi <abi/4.0>,
+        include <tunables/global>
+        profile local-bwrap /usr/bin/bwrap flags=(unconfined) {
+          userns,
+          include if exists <local/bwrap>
+        }
+        EOF
+        sudo systemctl reload apparmor

@@ -14,18 +14,25 @@ Every check is a [just](https://github.com/casey/just) recipe, run by both pre-c
 | --- | --- |
 | `just check test clippy fmt doc` | Build, test and lint (lint levels in `Cargo.toml` `[lints]`) |
 | `just deny` | Advisories, licenses, bans, build scripts, and sources |
-| `just zizmor actionlint gitleaks typos hadolint just-fmt` | Repository linters |
+| `just zizmor actionlint gitleaks typos hadolint shellcheck yamllint taplo-fmt just-fmt` | Repository linters |
+| `just commit-lint` | Conventional-commit message policy ([committed.toml](committed.toml)) |
 | `just verify-image` | Build and test the melange package, build the apko image, scan with Trivy and Grype |
+| `just repro-verify` | Build package and image twice; outputs must be bit-identical |
 | `just run` | Run the image with a read-only root filesystem, no capabilities and `no-new-privileges` |
 
-`verify-image` runs on `pre-push`; everything else on `pre-commit`.
+Formatters have `*-fix` variants (`fmt-fix`, `just-fmt-fix`, `taplo-fmt-fix`). `verify-image` runs on `pre-push`
+(skip in an emergency with `SKIP=verify-image git push`; CI still runs it), commit messages are checked on
+`commit-msg`, everything else on `pre-commit`.
 
 ## CI/CD
 
-- [rust.yml](.github/workflows/rust.yml): checks, audits, repository lint and a native x86_64/aarch64 image build and
-  scan. On `main` and `v*` tags the multi-arch image is pushed to GHCR, keyless-signed with cosign, and gets SBOM and
-  SLSA provenance attestations.
-- [maintenance.yml](.github/workflows/maintenance.yml): weekly signature check and re-scan of the published image.
+- [rust.yml](.github/workflows/rust.yml): CI on PRs and `main` — checks, audits, repository lint, a native
+  x86_64/aarch64 image build and scan, and multi-arch image assembly. Nothing is published.
+- [release.yml](.github/workflows/release.yml): manual dispatch from `main` only. Builds and publishes the version
+  currently in Cargo.toml to GHCR, keyless-signs it with cosign, attests SBOMs and SLSA provenance, verifies them,
+  then tags `vX.Y.Z`; a no-op if that tag already exists.
+- [maintenance.yml](.github/workflows/maintenance.yml): weekly signature check and re-scan of the published image,
+  RustSec advisories re-check, and reproducible-build verification.
 - [Renovate](renovate.json) updates all pins. After a mise tool bump run `mise lock`; after a mise or Rust bump update
   `MISE_SHA256` in the devcontainer Dockerfile and the `rust-X.Y~X.Y.Z` pin in `melange.yaml` by hand.
 
@@ -55,7 +62,7 @@ Published images are signed keylessly with cosign and carry SPDX SBOM and SLSA b
 
 ```sh
 cosign verify \
-  --certificate-identity-regexp '^https://github\.com/KrijnvanderBurg/gw2wrapper/\.github/workflows/rust\.yml@refs/(heads/main|tags/v.+)$' \
+  --certificate-identity-regexp '^https://github\.com/KrijnvanderBurg/gw2wrapper/\.github/workflows/release\.yml@refs/heads/main$' \
   --certificate-oidc-issuer https://token.actions.githubusercontent.com \
   ghcr.io/krijnvanderburg/gw2wrapper:<tag>
 gh attestation verify oci://ghcr.io/krijnvanderburg/gw2wrapper:<tag> --repo KrijnvanderBurg/gw2wrapper

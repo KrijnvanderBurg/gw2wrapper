@@ -1,0 +1,19 @@
+# yamllint configuration (see justfile: yamllint)
+# https://yamllint.readthedocs.io/en/stable/configuration.html
+
+extends: default
+
+ignore:
+  - target/
+  - build/
+
+rules:
+  # Long lines are common in workflows (pinned action refs) and melange/apko configs
+  line-length: disable
+  document-start: disable
+  truthy:
+    # GitHub workflows use the `on:` trigger key
+    check-keys: false
+  comments:
+    # Renovate writes pinned-action version comments with a single space, e.g. "@<sha> # v7.0.1"
+    min-spaces-from-content: 1

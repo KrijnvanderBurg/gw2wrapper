@@ -1,27 +1,13 @@
 #!/usr/bin/env bash
 # Publishes the multi-arch image from the melange packages in build/, then keyless-signs it and attests its SBOMs.
-#
-# Tags produced, by trigger:
-#   - version tag (refs/tags/vX.Y.Z): X.Y.Z, X.Y, X, latest, sha-<short>
-#   - main branch:                    edge, sha-<short>
-#   - manual dispatch (RC):           <version>-rc.sha-<short>, sha-<short>
+# The version comes from Cargo.toml; release.yml guarantees it is not already released.
+# Tags produced: X.Y.Z, X.Y, X, latest, sha-<short>
 set -euo pipefail
 
+version="$(grep -m1 '^version = ' Cargo.toml | cut -d'"' -f2)"
 sha="$(git rev-parse --short=12 HEAD)"
-tags=("sha-${sha}")
-
-if [[ "$GITHUB_REF" == refs/tags/v* ]]; then
-    version="${GITHUB_REF_NAME#v}"
-    tags+=("$version" "${version%.*}" "${version%%.*}" "latest")
-    primary_tag="$version"
-elif [[ "$GITHUB_REF" == "refs/heads/main" ]]; then
-    tags+=("edge")
-    primary_tag="edge"
-else
-    version="$(grep -m1 '^version = ' Cargo.toml | cut -d'"' -f2)"
-    tags+=("${version}-rc.sha-${sha}")
-    primary_tag="${version}-rc.sha-${sha}"
-fi
+tags=("$version" "${version%.*}" "${version%%.*}" "latest" "sha-${sha}")
+primary_tag="$version"
 
 refs=()
 for tag in "${tags[@]}"; do
