@@ -1,0 +1,3 @@
+# Keeps host build outputs (incl. the melange private key in build/) out of the melange build workspace
+target/
+build/

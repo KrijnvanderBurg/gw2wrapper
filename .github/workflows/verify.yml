@@ -1,0 +1,225 @@
+name: Verify
+
+# Reusable verification template: full test, lint, audit, build and scan.
+# Called by ci.yml (PRs, main) and release.yml (before publishing).
+# Uploads the signed melange packages as artifacts for the caller to publish.
+on:
+  workflow_call:
+
+permissions: {}
+
+# Not inherited from the caller; must be set here
+env:
+  MISE_PARANOID: "1"
+  CARGO_TERM_COLOR: always
+
+jobs:
+  check:
+    name: Check, Test & Lint
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Install Rust (rust-toolchain.toml)
+        run: rustup toolchain install
+
+      - name: Install tools (mise.toml)
+        # Gate job: nothing built here is published, and mise.lock checksums + MISE_PARANOID verify installs
+        uses: ./.github/actions/setup-tools
+        with:
+          tools: just
+
+      - name: Cache cargo registry & target
+        # Gate job: published artifacts are rebuilt hermetically inside the melange sandbox
+        uses: Swatinem/rust-cache@6323deb102c322ba6fcbdcafc7e3dddab59af2b6 # v2.9.2
+
+      - name: Cargo check
+        run: just check
+
+      - name: Cargo test
+        run: just test
+
+      - name: Cargo clippy
+        run: just clippy
+
+      - name: Cargo fmt
+        run: just fmt
+
+      - name: Cargo doc
+        run: just doc
+
+  security:
+    name: Security & Dependency Audit
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Install Rust (rust-toolchain.toml)
+        run: rustup toolchain install
+
+      - name: Install tools (mise.toml)
+        # Gate job: nothing built here is published, and mise.lock checksums + MISE_PARANOID verify installs
+        uses: ./.github/actions/setup-tools
+        with:
+          tools: just cargo-deny
+
+      - name: Cache cargo registry & target
+        # Gate job: published artifacts are rebuilt hermetically inside the melange sandbox
+        uses: Swatinem/rust-cache@6323deb102c322ba6fcbdcafc7e3dddab59af2b6 # v2.9.2
+
+      - name: Cargo deny (advisories)
+        run: just deny-advisories
+
+      - name: Cargo deny (licenses)
+        run: just deny-licenses
+
+      - name: Cargo deny (bans & sources)
+        run: just deny-bans
+
+  lint:
+    name: Repository Lint
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+          # Full history for gitleaks
+          fetch-depth: 0
+
+      - name: Install tools (mise.toml)
+        # Gate job: nothing built here is published, and mise.lock checksums + MISE_PARANOID verify installs
+        uses: ./.github/actions/setup-tools
+        with:
+          tools: just actionlint shellcheck zizmor gitleaks hadolint
+
+      - name: Zizmor
+        run: just zizmor
+        env:
+          # Enables zizmor's online audits (e.g. impostor commits, known-vulnerable actions)
+          GH_TOKEN: ${{ github.token }}
+
+      - name: Actionlint
+        run: just actionlint
+
+      - name: Gitleaks
+        run: just gitleaks
+
+      - name: Hadolint
+        run: just hadolint
+
+      - name: Shellcheck
+        run: just shellcheck
+
+      - name: Justfile format
+        run: just just-fmt
+
+  build:
+    name: Build & Container Verification (${{ matrix.arch }})
+    # Native runners per arch: melange's bubblewrap runner cannot cross-build
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 45
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - arch: x86_64
+            runner: ubuntu-24.04
+          - arch: aarch64
+            runner: ubuntu-24.04-arm
+    permissions:
+      contents: read
+      security-events: write
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Install tools (mise.toml)
+        # Artifact path: no caches, tools are checksum-verified downloads on every run
+        uses: ./.github/actions/setup-tools
+        with:
+          tools: just melange apko trivy grype
+          cache: "false"
+
+      - name: Setup bubblewrap
+        uses: ./.github/actions/setup-bubblewrap
+
+      - name: Test package, build image & scan with Trivy and Grype (justfile)
+        run: just verify-image
+        env:
+          TRIVY_FORMAT: sarif
+          TRIVY_OUTPUT: trivy-${{ matrix.arch }}.sarif
+          GRYPE_OUTPUT: sarif=grype-${{ matrix.arch }}.sarif
+
+      - name: Upload Trivy results to code scanning
+        if: ${{ !cancelled() && hashFiles(format('trivy-{0}.sarif', matrix.arch)) != '' && !github.event.pull_request.head.repo.fork }}
+        uses: github/codeql-action/upload-sarif@2892aa5e19bbd11bc0cff5427e3b750a04d9e3c2 # v4.38.2
+        with:
+          sarif_file: trivy-${{ matrix.arch }}.sarif
+          category: trivy-${{ matrix.arch }}
+
+      - name: Upload Grype results to code scanning
+        if: ${{ !cancelled() && hashFiles(format('grype-{0}.sarif', matrix.arch)) != '' && !github.event.pull_request.head.repo.fork }}
+        uses: github/codeql-action/upload-sarif@2892aa5e19bbd11bc0cff5427e3b750a04d9e3c2 # v4.38.2
+        with:
+          sarif_file: grype-${{ matrix.arch }}.sarif
+          category: grype-${{ matrix.arch }}
+
+      # Public key and signed packages only; the ephemeral private key never leaves the runner
+      - name: Upload melange packages
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: packages-${{ matrix.arch }}
+          path: |
+            build/packages/${{ matrix.arch }}
+            build/melange-${{ matrix.arch }}.rsa.pub
+          if-no-files-found: error
+          retention-days: 1
+
+  image:
+    name: Multi-arch Image
+    needs: [build]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Install tools (mise.toml)
+        # Artifact path: no caches, tools are checksum-verified downloads on every run
+        uses: ./.github/actions/setup-tools
+        with:
+          tools: just apko
+          cache: "false"
+
+      - name: Download melange packages
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          pattern: packages-*
+          path: build
+          merge-multiple: true
+
+      # Same inputs as publish-image.sh, without pushing; justfile sets SOURCE_DATE_EPOCH for reproducibility
+      - name: Build multi-arch image
+        run: just image-multiarch

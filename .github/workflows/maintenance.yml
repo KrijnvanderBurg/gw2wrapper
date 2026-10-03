@@ -1,0 +1,72 @@
+name: Maintenance
+
+on:
+  schedule:
+    - cron: '17 5 * * 1'
+  workflow_dispatch:
+
+permissions: {}
+
+env:
+  MISE_PARANOID: "1"
+  IMAGE: ghcr.io/krijnvanderburg/gw2wrapper
+
+jobs:
+  rescan:
+    name: Verify & re-scan published image
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    permissions:
+      contents: read
+      packages: read
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Install tools (mise.toml)
+        uses: ./.github/actions/setup-tools
+        with:
+          tools: cosign trivy grype
+
+      - name: Log in to GHCR
+        run: cosign login ghcr.io --username "$GITHUB_ACTOR" --password-stdin <<< "$GITHUB_TOKEN"
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      # latest tracks the most recent release published by release.yml
+      - name: Verify signature & SBOM attestation
+        uses: ./.github/actions/verify-image-signature
+        with:
+          image-ref: ${{ env.IMAGE }}:latest
+
+      - name: Scan with Trivy
+        run: trivy image --config trivy.yaml "$IMAGE:latest"
+
+      - name: Scan with Grype
+        run: grype --config .grype.yaml "registry:$IMAGE:latest"
+
+  advisories:
+    name: Dependency advisories re-check
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Install Rust (rust-toolchain.toml)
+        run: rustup toolchain install
+
+      - name: Install tools (mise.toml)
+        uses: ./.github/actions/setup-tools
+        with:
+          tools: just cargo-deny
+
+      # New RustSec advisories surface between pushes; CI only checks on code changes
+      - name: Cargo deny (advisories)
+        run: just deny-advisories

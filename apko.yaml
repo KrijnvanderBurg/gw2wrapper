@@ -1,0 +1,54 @@
+# apko configuration for gw2wrapper
+# Minimal OCI image with explicit dependencies
+# https://github.com/chainguard-dev/apko
+
+annotations:
+  org.opencontainers.image.source: "https://github.com/KrijnvanderBurg/gw2wrapper"
+  org.opencontainers.image.title: "gw2wrapper"
+  org.opencontainers.image.licenses: "Apache-2.0"
+  org.opencontainers.image.description: "Guild Wars 2 API wrapper"
+
+# The locally built gw2wrapper package, its repo and signing key are appended by the justfile (-p/-b/-k)
+contents:
+  repositories:
+    - https://packages.wolfi.dev/os
+
+  keyring:
+    - https://packages.wolfi.dev/os/wolfi-signing.rsa.pub
+
+  packages:
+    # Provides /etc/os-release so vulnerability scanners (Trivy/Grype) can detect the distro
+    - wolfi-baselayout
+    # CA certificates for HTTPS
+    - ca-certificates-bundle
+
+accounts:
+  users:
+    - username: appuser
+      uid: 65532
+      gid: 65532
+      shell: /sbin/nologin
+
+  groups:
+    - groupname: appuser
+      gid: 65532
+
+  # Numeric UID so Kubernetes runAsNonRoot can verify the user
+  run-as: "65532"
+
+# Root-owned and read/execute only, so the runtime user cannot modify the binary
+paths:
+  - path: /usr/local/bin/gw2wrapper
+    type: permissions
+    uid: 0
+    gid: 0
+    permissions: 0o555
+
+entrypoint:
+  command: /usr/local/bin/gw2wrapper
+
+work-dir: /
+
+archs:
+  - x86_64
+  - aarch64

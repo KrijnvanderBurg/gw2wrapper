@@ -1,0 +1,126 @@
+name: Release
+
+# Manual-only release, dispatched from main. Publishes the version in Cargo.toml
+# as a signed, attested multi-arch image; a no-op if v<version> already exists.
+on:
+  workflow_dispatch:
+
+permissions: {}
+
+# Only one release at a time; never cancel mid-release
+concurrency:
+  group: release
+  cancel-in-progress: false
+
+env:
+  MISE_PARANOID: "1"
+  CARGO_TERM_COLOR: always
+  IMAGE: ghcr.io/krijnvanderburg/gw2wrapper
+
+jobs:
+  version:
+    name: Resolve Version
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    permissions:
+      contents: read
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+      exists: ${{ steps.version.outputs.exists }}
+    steps:
+      # Signature verification pins the identity to main, so releasing elsewhere would publish then fail
+      - name: Require main
+        if: ${{ github.ref != 'refs/heads/main' }}
+        run: |
+          echo "Releases must be dispatched from main (got $GITHUB_REF)" >&2
+          exit 1
+
+      - name: Checkout code
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Read Cargo.toml version & check for existing tag
+        id: version
+        run: |
+          version="$(grep -m1 '^version = ' Cargo.toml | cut -d'"' -f2)"
+          if git ls-remote --exit-code --tags origin "refs/tags/v${version}" > /dev/null; then
+            echo "v${version} already exists; nothing to do"
+            echo "exists=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "exists=false" >> "$GITHUB_OUTPUT"
+          fi
+          echo "version=${version}" >> "$GITHUB_OUTPUT"
+
+  # Full verification via the same template as CI; its build jobs upload the melange packages
+  verify:
+    name: Verify
+    needs: [version]
+    if: ${{ needs.version.outputs.exists == 'false' }}
+    uses: ./.github/workflows/verify.yml
+    permissions:
+      contents: read
+      security-events: write # Trivy/Grype SARIF upload in the build job
+
+  publish:
+    name: Publish, Sign & Attest
+    needs: [version, verify]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    environment: release
+    permissions:
+      contents: write # push the v<version> tag after a successful publish
+      packages: write
+      id-token: write
+      attestations: write
+    steps:
+      # The release tag is pushed over the checkout credentials
+      - name: Checkout code
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: true
+
+      - name: Install tools (mise.toml)
+        # Artifact path: no caches, tools are checksum-verified downloads on every run
+        uses: ./.github/actions/setup-tools
+        with:
+          tools: apko cosign
+          cache: "false"
+
+      - name: Download melange packages
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          pattern: packages-*
+          path: build
+          merge-multiple: true
+
+      - name: Log in to GHCR
+        run: cosign login ghcr.io --username "$GITHUB_ACTOR" --password-stdin <<< "$GITHUB_TOKEN"
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Publish, sign & attest SBOMs
+        id: publish
+        uses: ./.github/actions/publish-image
+        with:
+          image: ${{ env.IMAGE }}
+
+      - name: Attest build provenance (SLSA)
+        uses: actions/attest-build-provenance@4d101475d8b20a2381f78447822ac1eab6504dd8 # v4.2.2
+        with:
+          subject-name: ${{ env.IMAGE }}
+          subject-digest: ${{ steps.publish.outputs.digest }}
+          push-to-registry: true
+
+      - name: Verify signature & SBOM attestation
+        uses: ./.github/actions/verify-image-signature
+        with:
+          image-ref: ${{ env.IMAGE }}@${{ steps.publish.outputs.digest }}
+
+      # Tag last, so a failed release can simply be re-run
+      - name: Tag release
+        run: |
+          git tag "v${VERSION}"
+          git push origin "refs/tags/v${VERSION}"
+        env:
+          VERSION: ${{ needs.version.outputs.version }}

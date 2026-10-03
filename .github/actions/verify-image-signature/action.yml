@@ -1,0 +1,15 @@
+name: Verify image signature
+description: Verify the cosign keyless signature and SBOM attestation of a published image
+
+inputs:
+  image-ref:
+    description: Image reference to verify
+    required: true
+
+runs:
+  using: composite
+  steps:
+    - shell: bash
+      run: $GITHUB_WORKSPACE/.github/scripts/verify-image-signature.sh "$IMAGE_REF"
+      env:
+        IMAGE_REF: ${{ inputs.image-ref }}

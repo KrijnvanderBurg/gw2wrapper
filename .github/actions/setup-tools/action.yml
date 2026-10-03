@@ -1,0 +1,22 @@
+name: Setup tools
+description: Install the exact tool versions pinned in mise.toml/mise.lock
+
+# Single place for the mise version pin; keep in sync with min_version in mise.toml
+inputs:
+  tools:
+    description: Space-separated tool names from mise.toml to install
+    required: true
+  cache:
+    description: Cache tool installs; keep "false" in jobs that produce published artifacts
+    required: false
+    default: "true"
+
+runs:
+  using: composite
+  steps:
+    - name: Install tools (mise.toml)
+      uses: jdx/mise-action@7a4e45a543138629540c9a1616d08632b893e492 # v5.0.1
+      with:
+        version: 2026.9.18
+        install_args: ${{ inputs.tools }}
+        cache: ${{ inputs.cache }}

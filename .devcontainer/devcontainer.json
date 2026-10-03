@@ -1,0 +1,119 @@
+// https://containers.dev/implementors/json_reference/
+{
+    "name": "Rust",
+    "build": {
+        "dockerfile": "Dockerfile"
+    },
+    "remoteUser": "vscode",
+    "containerUser": "vscode",
+    // mise shims put the tools pinned in mise.toml on PATH for terminals and tasks
+    "remoteEnv": {
+        "PATH": "/home/vscode/.local/share/mise/shims:${containerEnv:PATH}"
+    },
+    // paranoid is only honoured when set globally, not from the project mise.toml
+    "containerEnv": {
+        "MISE_PARANOID": "1"
+    },
+    //
+    // Features - https://containers.dev/implementors/features.
+    //
+    "features": {
+        "ghcr.io/devcontainers/features/rust:1": {},
+        "ghcr.io/devcontainers/features/python:1": {},
+        // Isolated daemon instead of the host socket; note this feature runs the devcontainer privileged
+        "ghcr.io/devcontainers/features/docker-in-docker:2": {}
+    },
+    "onCreateCommand": {
+        "mise-install": "mise trust && mise install"
+    },
+    "postCreateCommand": {
+        "pre-commit install": "pre-commit install"
+    },
+    // "postStartCommand": {},
+    // "postAttachCommand": {},
+    // "updateContentCommand": {},
+    // "waitFor": "", // default updateContentCommand
+    "customizations": {
+        "vscode": {
+            "extensions": [
+                // Tools
+                "eamodio.gitlens", // https://marketplace.visualstudio.com/items?itemName=eamodio.gitlens
+                // Rust
+                "rust-lang.rust-analyzer", // https://marketplace.visualstudio.com/items?itemName=rust-lang.rust-analyzer
+                // Copilot
+                "GitHub.copilot", // https://marketplace.visualstudio.com/items?itemName=GitHub.copilot
+                "GitHub.copilot-chat", // https://marketplace.visualstudio.com/items?itemName=GitHub.copilot-chat
+                // Docker
+                "ms-azuretools.vscode-docker",
+                "ms-azuretools.vscode-containers"
+            ],
+            "settings": {
+                //
+                // Add the extension IDs you want to suppress
+                //
+                "gitlens.hovers.enabled": false,
+                "extensions.unwantedRecommendations": [],
+                //
+                // Rust files
+                //
+                "[rust]": {
+                    "editor.defaultFormatter": "rust-lang.rust-analyzer",
+                    "editor.formatOnSave": true,
+                    "editor.codeActionsOnSave": {
+                        "source.organizeImports.rust": "explicit",
+                        "source.fixAll.rust": "explicit"
+                    }
+                },
+                //
+                // Rust Analyzer settings
+                //
+                "rust-analyzer.checkOnSave": true,
+                "rust-analyzer.checkOnSave.command": "clippy",
+                //
+                // Git - search gitignore in parent monorepo folder
+                //
+                "git.openRepositoryInParentFolders": "always",
+                "search.useIgnoreFiles": true,
+                "search.useParentIgnoreFiles": true,
+                //
+                // VsCode Tasks
+                //
+                "tasks": {
+                    // https://code.visualstudio.com/docs/editor/tasks#vscode
+                    "version": "2.0.0",
+                    "options": {},
+                    "tasks": [
+						{
+							"label": "All",
+							"dependsOn": [
+								"pre-commit run (all files)"
+							],
+							"dependsOrder": "sequence",
+							"runOptions": {
+								"runOn": "folderOpen"
+							},
+                            "group": "test",
+							"problemMatcher": []
+						},
+                        {
+                            "label": "pre-commit run (all files)",
+                            "type": "shell",
+                            "command": "pre-commit",
+                            "args": [
+                                "run",
+                                "--all-files"
+                            ],
+                            "group": "test",
+                            "presentation": {
+                                "reveal": "always",
+                                "panel": ""
+                            },
+                            "clear": true,
+                            "problemMatcher": []
+                        }
+                    ]
+                }
+            }
+        }
+    }
+}

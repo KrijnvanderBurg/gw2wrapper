@@ -1,0 +1,56 @@
+# Cargo-deny configuration for gw2wrapper
+# Comprehensive dependency security and compliance checks
+# https://embarkstudios.github.io/cargo-deny/
+
+[graph]
+targets = ["x86_64-unknown-linux-gnu", "aarch64-unknown-linux-gnu"]
+all-features = true
+
+[advisories]
+db-path = "$CARGO_HOME/advisory-db"
+db-urls = ["https://github.com/rustsec/advisory-db"]
+unmaintained = "all"
+yanked = "deny"
+ignore = []
+
+[licenses]
+# FOSS-only policy: permissive and weak-copyleft licenses only
+# All licenses are denied unless explicitly allowed, so there is no need for
+# a separate GPL/AGPL/SSPL deny list (see https://github.com/EmbarkStudios/cargo-deny/pull/611)
+allow = [
+  "Apache-2.0",
+]
+unused-allowed-license = "deny"
+confidence-threshold = 0.8
+exceptions = []
+
+[bans]
+# Deny multiple versions of the same crate
+multiple-versions = "deny"
+# Deny wildcard dependencies
+wildcards = "deny"
+# Enforce rustls for TLS
+deny = [
+  { crate = "openssl", reason = "use rustls" },
+  { crate = "openssl-sys", reason = "use rustls" },
+  { crate = "native-tls", reason = "use rustls" },
+]
+
+# Build scripts run arbitrary code at compile time, so each one must be allowlisted explicitly
+[bans.build]
+allow-build-scripts = []
+executables = "deny"
+interpreted = "deny"
+include-dependencies = true
+include-workspace = true
+include-archives = true
+enable-builtin-globs = true
+
+[sources]
+# Only allow crates.io
+allow-org = { github = [] }
+allow-registry = ["https://github.com/rust-lang/crates.io-index"]
+allow-git = []
+
+unknown-registry = "deny"
+unknown-git = "deny"

@@ -1,0 +1,21 @@
+name: Publish image
+description: Push the multi-arch apko image, keyless-sign it and attest its SBOMs
+
+inputs:
+  image:
+    description: Image repository, e.g. ghcr.io/owner/name
+    required: true
+
+outputs:
+  digest:
+    description: Digest of the published image index
+    value: ${{ steps.publish.outputs.digest }}
+
+runs:
+  using: composite
+  steps:
+    - id: publish
+      shell: bash
+      run: $GITHUB_WORKSPACE/.github/scripts/publish-image.sh
+      env:
+        IMAGE: ${{ inputs.image }}
