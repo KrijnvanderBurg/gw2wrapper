@@ -94,10 +94,6 @@ taplo-fmt:
 taplo-fmt-fix:
     taplo fmt
 
-# Lint commit messages against the conventional-commit policy (committed.toml)
-commit-lint range="HEAD~1..HEAD":
-    committed {{ range }}
-
 # Verify justfile formatting
 just-fmt:
     just --fmt --check --unstable

@@ -27,8 +27,6 @@ locale = "en-gb"
 
 [default.extend-identifiers]
 CARGO_TERM_COLOR = "CARGO_TERM_COLOR"
-# committed.toml config key, spelled by the upstream tool
-subject_capitalized = "subject_capitalized"
 # <typo> = "<correction>"
 
 # [type.NAME]

@@ -1,8 +1,8 @@
 # Pre-commit hooks for Rust project
-# Install: pre-commit install (installs the pre-commit, commit-msg and pre-push hooks)
+# Install: pre-commit install (installs both pre-commit and pre-push hooks)
 # Run manually: pre-commit run --all-files
 
-default_install_hook_types: [pre-commit, commit-msg, pre-push]
+default_install_hook_types: [pre-commit, pre-push]
 default_stages: [pre-commit]
 
 repos:
@@ -146,13 +146,6 @@ repos:
         language: system
         files: '(^|/)justfile$'
         pass_filenames: false
-
-      # Commit-message policy (committed.toml); CI lints the full PR range via `just commit-lint`
-      - id: committed
-        name: committed (commit message)
-        entry: committed --commit-file
-        language: system
-        stages: [commit-msg]
 
       # CI "Build & Container Verification"; on push only since it builds and scans the image.
       # Escape hatch for emergencies (CI still runs it): SKIP=verify-image git push

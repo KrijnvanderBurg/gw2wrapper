@@ -54,16 +54,6 @@ version = "0.7.6"
 backend = "cargo:cargo-auditable"
 specifiers = ["0.7.6"]
 
-[[tools.committed]]
-version = "1.1.11"
-backend = "aqua:crate-ci/committed"
-specifiers = ["1.1.11"]
-
-[tools.committed."platforms.linux-x64"]
-checksum = "sha256:1e5c20049eeaa4633e6798283913f92dc90a97f2b5c6dfc28e8c4b7e77a67157"
-url = "https://github.com/crate-ci/committed/releases/download/v1.1.11/committed-v1.1.11-x86_64-unknown-linux-musl.tar.gz"
-url_api = "https://api.github.com/repos/crate-ci/committed/releases/assets/361544963"
-
 [[tools.cosign]]
 version = "3.1.3"
 backend = "aqua:sigstore/cosign"

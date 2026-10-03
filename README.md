@@ -15,14 +15,12 @@ Every check is a [just](https://github.com/casey/just) recipe, run by both pre-c
 | `just check test clippy fmt doc` | Build, test and lint (lint levels in `Cargo.toml` `[lints]`) |
 | `just deny` | Advisories, licenses, bans, build scripts, and sources |
 | `just zizmor actionlint gitleaks typos hadolint shellcheck yamllint taplo-fmt just-fmt` | Repository linters |
-| `just commit-lint` | Conventional-commit message policy ([committed.toml](committed.toml)) |
 | `just verify-image` | Build and test the melange package, build the apko image, scan with Trivy and Grype |
 | `just repro-verify` | Build package and image twice; outputs must be bit-identical |
 | `just run` | Run the image with a read-only root filesystem, no capabilities and `no-new-privileges` |
 
 Formatters have `*-fix` variants (`fmt-fix`, `just-fmt-fix`, `taplo-fmt-fix`). `verify-image` runs on `pre-push`
-(skip in an emergency with `SKIP=verify-image git push`; CI still runs it), commit messages are checked on
-`commit-msg`, everything else on `pre-commit`.
+(skip in an emergency with `SKIP=verify-image git push`; CI still runs it); everything else on `pre-commit`.
 
 ## CI/CD
 
