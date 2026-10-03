@@ -1,0 +1,4 @@
+# Trivy ignore list (see trivy.yaml)
+# HEALTHCHECK is Docker-specific; apko/OCI image configs cannot define one and the
+# binary is a run-to-completion CLI, not a service
+DS-0026
